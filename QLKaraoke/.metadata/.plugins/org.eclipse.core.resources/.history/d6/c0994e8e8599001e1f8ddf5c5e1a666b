@@ -1,0 +1,820 @@
+package GiaoDien;
+
+import java.awt.Color;
+import java.awt.Desktop;
+import java.awt.Dimension;
+import java.awt.Font;
+import java.awt.GridLayout;
+import java.awt.event.ActionEvent;
+import java.awt.event.ActionListener;
+import java.awt.event.KeyEvent;
+import java.awt.event.MouseAdapter;
+import java.awt.event.MouseEvent;
+import java.net.URL;
+import java.sql.Connection;
+import java.sql.DriverManager;
+import java.sql.PreparedStatement;
+import java.sql.ResultSet;
+import java.sql.SQLException;
+import java.text.DecimalFormat;
+import java.time.LocalDateTime;
+import java.time.format.DateTimeFormatter;
+import java.util.ArrayList;
+import java.util.Calendar;
+import java.util.List;
+
+import javax.swing.AbstractAction;
+import javax.swing.BorderFactory;
+import javax.swing.ImageIcon;
+import javax.swing.JButton;
+import javax.swing.JComponent;
+import javax.swing.JFrame;
+import javax.swing.JLabel;
+import javax.swing.JOptionPane;
+import javax.swing.JPanel;
+import javax.swing.JScrollPane;
+import javax.swing.JTextField;
+import javax.swing.KeyStroke;
+import javax.swing.SwingConstants;
+import javax.swing.Timer;
+import javax.swing.border.EmptyBorder;
+import javax.swing.border.LineBorder;
+
+
+import DAO.QLPH_DAO;
+import Entity.PhieuDatPhong;
+import Entity.Phong;
+import Entity.UserInfo;
+import connectDB.connectDB;
+
+public class GD_TraPhong extends JFrame implements ActionListener {
+
+	private static final long serialVersionUID = 1L;
+	private JPanel contentPane;
+	private JLabel lblClock;
+	private Timer timer;
+	@SuppressWarnings("unused")
+	private testbutton.Buttontest btnthuephong, btnhuyphong;
+	@SuppressWarnings("unused")
+	private ArrayList<PhieuDatPhong> pdpList = new ArrayList<PhieuDatPhong>();
+	private JTextField textFieldTìmKhachDaThue;
+	private JLabel lbltenql;
+	DecimalFormat currencyFormat = new DecimalFormat("###,###,### VND");
+
+	/**
+	 * Launch the application.
+	 */
+	
+	private String formatCurrency(double tienTe) {
+	    // Create a DecimalFormat with the desired format
+	    currencyFormat = new DecimalFormat("###,###,### VND");
+	    
+	    // Format the amount as currency
+//	    String formattedAmount = currencyFormat.format(tienTe);
+	    
+	    return currencyFormat.format(tienTe);
+	}
+//
+	/**
+	 * Create the frame.
+	 */
+	public GD_TraPhong() {
+//		initComponents();
+		setResizable(false);
+		setDefaultCloseOperation(JFrame.EXIT_ON_CLOSE);
+		setTitle("Giao Diện Trả Phòng");
+		setBounds(100, 100, 1175, 650);
+		contentPane = new JPanel();
+		contentPane.setBorder(new EmptyBorder(5, 5, 5, 5));
+
+		setContentPane(contentPane);
+		contentPane.setLayout(null);
+
+		connectDB.getInstance().connect();
+		loadData();
+//		 Ho tro -----------------------
+		JButton btnNewButton = new JButton("");
+		btnNewButton.addActionListener(new ActionListener() {
+			public void actionPerformed(ActionEvent e) {
+				try {
+					Desktop.getDesktop().browse(new URL("https://thach1311.github.io/huongDan/").toURI());
+				} catch (Exception ex) {
+				}
+			}
+		});
+		btnNewButton.setIcon(new ImageIcon(GD_Main_NV.class.getResource("/Imgs/iconHoTro.png")));
+		btnNewButton.setBounds(304, 10, 49, 50);
+		contentPane.add(btnNewButton);
+
+//		------------------------------------------
+		JLabel lblquanly = new JLabel("NV:");
+		lblquanly.setForeground(Color.WHITE);
+		lblquanly.setFont(new Font("Tahoma", Font.BOLD, 16));
+		lblquanly.setBounds(878, -20, 232, 80);
+		contentPane.add(lblquanly);
+
+		lbltenql = new JLabel();
+		lbltenql.setForeground(Color.WHITE);
+		lbltenql.setFont(new Font("Tahoma", Font.BOLD, 16));
+		lbltenql.setBounds(833, 6, 232, 80);
+		lbltenql.setText(UserInfo.getTenNhanVien());
+		contentPane.add(lbltenql);
+
+		JButton jButton = new JButton("Đăng Xuất");
+		jButton.setBounds(980, 13, 135, 42);
+		jButton.setFont(new Font("Tahoma ", Font.BOLD, 14));
+		jButton.setBackground(new Color(255, 0, 0));
+		jButton.setForeground(Color.WHITE);
+
+		jButton.setBorder(BorderFactory.createLineBorder(Color.RED, 2, true));
+		jButton.setBorder(BorderFactory.createLineBorder(Color.RED, 2, true));
+		jButton.setContentAreaFilled(false);
+		jButton.setFocusPainted(false);
+		jButton.setOpaque(true);
+		contentPane.add(jButton);
+
+		jButton.addMouseListener(new MouseAdapter() {
+			@Override
+			public void mouseEntered(MouseEvent e) {
+				jButton.setBackground(Color.BLACK);
+			}
+
+			@Override
+			public void mouseExited(MouseEvent e) {
+				jButton.setBackground(new Color(255, 0, 0));
+			}
+		});
+
+		jButton.addActionListener(new ActionListener() {
+			public void actionPerformed(ActionEvent e) {
+				if (JOptionPane.showConfirmDialog(null, "Bạn có muốn đăng xuất!", null,
+						JOptionPane.YES_NO_OPTION) == JOptionPane.YES_OPTION) {
+					GD_Login lg = new GD_Login();
+					lg.setVisible(true);
+					lg.setLocationRelativeTo(null);
+					dispose();
+				}
+			}
+		});
+
+		JLabel lblavatar = new JLabel("");
+		lblavatar.setHorizontalAlignment(SwingConstants.CENTER);
+		lblavatar.setIcon(new ImageIcon(GD_Main_QL.class.getResource("/Imgs/t1 1.png")));
+		lblavatar.setBounds(90, -444, 1333, 957);
+		contentPane.add(lblavatar);
+
+		JPanel box_clock = new JPanel();
+		box_clock.setBackground(new Color(255, 255, 255));
+		box_clock.setBounds(34, 10, 260, 50);
+		contentPane.add(box_clock);
+		box_clock.setLayout(null);
+
+		lblClock = new JLabel();
+		lblClock.setHorizontalAlignment(SwingConstants.CENTER);
+		lblClock.setFont(new Font("Tahoma", Font.PLAIN, 20));
+		lblClock.setBounds(10, 0, 240, 50);
+		lblClock.setForeground(Color.BLACK);
+		box_clock.add(lblClock);
+
+		timer = new Timer(0, this);
+		timer.start();
+
+		testbutton.Buttontest btndatphong1 = new testbutton.Buttontest();
+        btndatphong1.addMouseListener(new MouseAdapter() {
+			@Override
+			public void mouseClicked(MouseEvent e) {
+				GD_DatPhong gddatphong = new GD_DatPhong();
+				gddatphong.setDefaultCloseOperation(JFrame.DISPOSE_ON_CLOSE);
+				gddatphong.setVisible(true);
+				dispose();
+			}
+		});
+        KeyStroke keyStrokeDatPhong = KeyStroke.getKeyStroke(KeyEvent.VK_F1, 0);
+        btndatphong1.getInputMap(JComponent.WHEN_IN_FOCUSED_WINDOW).put(keyStrokeDatPhong, "F1");
+        btndatphong1.getActionMap().put("F1", new AbstractAction() {
+            /**
+			 * 
+			 */
+			private static final long serialVersionUID = 1L;
+
+			@Override
+            public void actionPerformed(ActionEvent e) {
+                // Xử lý khi phím tắt được nhấn
+				GD_DatPhong gddatphong = new GD_DatPhong();
+				gddatphong.setDefaultCloseOperation(JFrame.DISPOSE_ON_CLOSE);
+				gddatphong.setVisible(true);
+				dispose();
+            }
+        });
+        btndatphong1.setBorder(null);
+        btndatphong1.setText("Đặt Phòng (F1)");
+        btndatphong1.setForeground(Color.WHITE);
+        btndatphong1.setFont(new Font("Tahoma", Font.BOLD, 18));
+        btndatphong1.setBackground(new Color(0,0,0, 150));
+        btndatphong1.setBounds(0, 70, 166, 87);
+		contentPane.add(btndatphong1);
+		btndatphong1.setLayout(null);
+        
+        testbutton.Buttontest btnthuephong = new testbutton.Buttontest();
+        btnthuephong.addMouseListener(new MouseAdapter() {
+			@Override
+			public void mouseClicked(MouseEvent e) {
+				GD_ThuePhong gdthuephong = new GD_ThuePhong();
+				gdthuephong.setDefaultCloseOperation(JFrame.DISPOSE_ON_CLOSE);
+				gdthuephong.setVisible(true);
+				dispose();
+			}
+		});
+        KeyStroke keyStrokeThuePhong = KeyStroke.getKeyStroke(KeyEvent.VK_F2, 0);
+        btnthuephong.getInputMap(JComponent.WHEN_IN_FOCUSED_WINDOW).put(keyStrokeThuePhong, "F2");
+        btnthuephong.getActionMap().put("F2", new AbstractAction() {
+            /**
+			 * 
+			 */
+			private static final long serialVersionUID = 1L;
+
+			@Override
+            public void actionPerformed(ActionEvent e) {
+                // Xử lý khi phím tắt được nhấn
+				GD_ThuePhong gdthuephong = new GD_ThuePhong();
+				gdthuephong.setDefaultCloseOperation(JFrame.DISPOSE_ON_CLOSE);
+				gdthuephong.setVisible(true);
+				dispose();
+            }
+        });
+        btnthuephong.setBorder(null);
+        btnthuephong.setText("Thuê Phòng (F2)");
+        btnthuephong.setForeground(Color.WHITE);
+        btnthuephong.setFont(new Font("Tahoma", Font.BOLD, 18));
+        btnthuephong.setBackground(new Color(0,0,0, 150));
+        btnthuephong.setBounds(165, 70, 166, 87);
+		contentPane.add(btnthuephong);
+		btnthuephong.setLayout(null);
+		
+        testbutton.Buttontest btndatdichvu = new testbutton.Buttontest();
+        btndatdichvu.addMouseListener(new MouseAdapter() {
+			@Override
+			public void mouseClicked(MouseEvent e) {
+				GD_DatDichVu gddv = new GD_DatDichVu();
+				gddv.setDefaultCloseOperation(JFrame.DISPOSE_ON_CLOSE);
+				gddv.setVisible(true);
+				dispose();
+			}
+		});
+        KeyStroke keyStrokeDatdv = KeyStroke.getKeyStroke(KeyEvent.VK_F3, 0);
+        btndatdichvu.getInputMap(JComponent.WHEN_IN_FOCUSED_WINDOW).put(keyStrokeDatdv, "F3");
+        btndatdichvu.getActionMap().put("F3", new AbstractAction() {
+            /**
+			 * 
+			 */
+			private static final long serialVersionUID = 1L;
+
+			@Override
+            public void actionPerformed(ActionEvent e) {
+                // Xử lý khi phím tắt được nhấn
+				GD_DatDichVu gddv = new GD_DatDichVu();
+				gddv.setDefaultCloseOperation(JFrame.DISPOSE_ON_CLOSE);
+				gddv.setVisible(true);
+				dispose();
+            }
+        });
+        btndatdichvu.setBorder(null);
+        btndatdichvu.setText("Đặt Dịch Vụ (F3)");
+        btndatdichvu.setForeground(Color.WHITE);
+        btndatdichvu.setFont(new Font("Tahoma", Font.BOLD, 18));
+        btndatdichvu.setBackground(new Color(0, 0, 0, 150));
+        btndatdichvu.setBounds(332, 70, 166, 87);
+		contentPane.add(btndatdichvu);
+		btndatdichvu.setLayout(null);
+        
+        testbutton.Buttontest btntstTrPhng = new testbutton.Buttontest();
+        btntstTrPhng.addMouseListener(new MouseAdapter() {
+			@Override
+			public void mouseClicked(MouseEvent e) {
+				
+			}
+		});
+        KeyStroke keyStrokeTrPhong = KeyStroke.getKeyStroke(KeyEvent.VK_F4, 0);
+        btntstTrPhng.getInputMap(JComponent.WHEN_IN_FOCUSED_WINDOW).put(keyStrokeTrPhong, "F4");
+        btntstTrPhng.getActionMap().put("F4", new AbstractAction() {
+            /**
+			 * 
+			 */
+			private static final long serialVersionUID = 1L;
+
+			@Override
+            public void actionPerformed(ActionEvent e) {
+                // Xử lý khi phím tắt được nhấn
+				
+            }
+        });
+        btntstTrPhng.setBorder(null);
+        btntstTrPhng.setText("Trả Phòng (F4)");
+        btntstTrPhng.setForeground(Color.WHITE);
+        btntstTrPhng.setFont(new Font("Tahoma", Font.BOLD, 18));
+        btntstTrPhng.setBackground(new Color(128,128,128, 150));
+        btntstTrPhng.setBounds(496, 70, 165, 87);
+        contentPane.add(btntstTrPhng);
+        btntstTrPhng.setLayout(null);
+        
+        testbutton.Buttontest btnkhachhang = new testbutton.Buttontest();
+        btnkhachhang.addMouseListener(new MouseAdapter() {
+			@Override
+			public void mouseClicked(MouseEvent e) {
+				GD_QuanLyKhachHang gdqlykhachhang = new GD_QuanLyKhachHang();
+				gdqlykhachhang.setDefaultCloseOperation(JFrame.DISPOSE_ON_CLOSE);
+				gdqlykhachhang.setVisible(true);
+				dispose();
+			}
+		});
+        KeyStroke keyStrokeQLKH = KeyStroke.getKeyStroke(KeyEvent.VK_F5, 0);
+        btnkhachhang.getInputMap(JComponent.WHEN_IN_FOCUSED_WINDOW).put(keyStrokeQLKH, "F5");
+        btnkhachhang.getActionMap().put("F5", new AbstractAction() {
+            /**
+			 * 
+			 */
+			private static final long serialVersionUID = 1L;
+
+			@Override
+            public void actionPerformed(ActionEvent e) {
+                // Xử lý khi phím tắt được nhấn
+				GD_QuanLyKhachHang gdqlykhachhang = new GD_QuanLyKhachHang();
+				gdqlykhachhang.setDefaultCloseOperation(JFrame.DISPOSE_ON_CLOSE);
+				gdqlykhachhang.setVisible(true);
+				dispose();
+            }
+        });
+        btnkhachhang.setBorder(null);
+        btnkhachhang.setText("Khách Hàng (F5)");
+        btnkhachhang.setForeground(Color.WHITE);
+        btnkhachhang.setFont(new Font("Tahoma", Font.BOLD, 18));
+        btnkhachhang.setBackground(new Color(0, 0, 0, 150));
+        btnkhachhang.setBounds(660, 70, 166, 87);
+		contentPane.add(btnkhachhang);
+		btnkhachhang.setLayout(null);
+		
+		testbutton.Buttontest btnhoadon = new testbutton.Buttontest();
+		btnhoadon.addMouseListener(new MouseAdapter() {
+			@Override
+			public void mouseClicked(MouseEvent e) {
+				GD_QLHoaDon gdqlhoadon = new GD_QLHoaDon();
+				gdqlhoadon.setDefaultCloseOperation(JFrame.DISPOSE_ON_CLOSE);
+				gdqlhoadon.setVisible(true);
+				dispose();
+			}
+		});
+		KeyStroke keyStrokeQLHD = KeyStroke.getKeyStroke(KeyEvent.VK_F6, 0);
+		btnhoadon.getInputMap(JComponent.WHEN_IN_FOCUSED_WINDOW).put(keyStrokeQLHD, "F6");
+		btnhoadon.getActionMap().put("F6", new AbstractAction() {
+            /**
+			 * 
+			 */
+			private static final long serialVersionUID = 1L;
+
+			@Override
+            public void actionPerformed(ActionEvent e) {
+                // Xử lý khi phím tắt được nhấn
+            	GD_QLHoaDon gdqlhoadon = new GD_QLHoaDon();
+				gdqlhoadon.setDefaultCloseOperation(JFrame.DISPOSE_ON_CLOSE);
+				gdqlhoadon.setVisible(true);
+				dispose();
+            }
+        });
+		btnhoadon.setBorder(null);
+		btnhoadon.setText("Hóa Đơn (F6)");
+		btnhoadon.setForeground(Color.WHITE);
+		btnhoadon.setFont(new Font("Tahoma", Font.BOLD, 18));
+		btnhoadon.setBackground(new Color(0, 0, 0, 150));
+		btnhoadon.setBounds(828, 70, 165, 87);
+		contentPane.add(btnhoadon);
+		btnhoadon.setLayout(null);
+		
+        testbutton.Buttontest btnthongke = new testbutton.Buttontest();
+        btnthongke.addMouseListener(new MouseAdapter() {
+			@Override
+			public void mouseClicked(MouseEvent e) {
+				GD_ThongKeKhachHang thongkekhachhang = new GD_ThongKeKhachHang();
+				thongkekhachhang.setDefaultCloseOperation(JFrame.DISPOSE_ON_CLOSE);
+				thongkekhachhang.setVisible(true);
+				dispose();
+			}
+		});
+        KeyStroke keyStrokeThongKe = KeyStroke.getKeyStroke(KeyEvent.VK_F7, 0);
+        btnthongke.getInputMap(JComponent.WHEN_IN_FOCUSED_WINDOW).put(keyStrokeThongKe, "F7");
+        btnthongke.getActionMap().put("F7", new AbstractAction() {
+            /**
+			 * 
+			 */
+			private static final long serialVersionUID = 1L;
+
+			@Override
+            public void actionPerformed(ActionEvent e) {
+                // Xử lý khi phím tắt được nhấn
+				GD_ThongKeKhachHang thongkekhachhang = new GD_ThongKeKhachHang();
+				thongkekhachhang.setDefaultCloseOperation(JFrame.DISPOSE_ON_CLOSE);
+				thongkekhachhang.setVisible(true);
+				dispose();
+            }
+        });
+        btnthongke.setBorder(null);
+        btnthongke.setText("Thống Kê (F7)");
+        btnthongke.setForeground(Color.WHITE);
+        btnthongke.setFont(new Font("Tahoma", Font.BOLD, 18));
+        btnthongke.setBackground(new Color(0, 0, 0, 150));
+        btnthongke.setBounds(993, 70, 166, 87);
+		contentPane.add(btnthongke);
+		btnthongke.setLayout(null);
+
+		JLabel lb_hinhnen = new JLabel("");
+		lb_hinhnen.setIcon(new ImageIcon(GD_DatPhong.class.getResource("/Imgs/370.png")));
+		lb_hinhnen.setBounds(-40, -176, 1333, 957);
+		contentPane.add(lb_hinhnen);
+
+	}
+
+	private void loadData() {
+		QLPH_DAO ds = new QLPH_DAO();
+		ArrayList<Phong> listPhong = ds.docbang();
+		draw(listPhong);
+	}
+
+	private void draw(List<Phong> listph) {
+		JPanel pnl_danhsachphonghat = new JPanel();
+		pnl_danhsachphonghat.setBorder(null);
+		pnl_danhsachphonghat.setBackground(new Color(255, 255, 255, 150));
+		pnl_danhsachphonghat.setBounds(0, 148, 1161, 465);
+		pnl_danhsachphonghat.setLayout(null);
+		contentPane.add(pnl_danhsachphonghat);
+
+		JScrollPane scrollPane_DSPH = new JScrollPane();
+		scrollPane_DSPH.setBounds(149, 34, 871, 431);
+		scrollPane_DSPH.setBackground(new Color(255, 255, 255, 0));
+		pnl_danhsachphonghat.add(scrollPane_DSPH);
+
+		JPanel panel_dsph = new JPanel();
+		panel_dsph.setBackground(new Color(255, 255, 255));
+		scrollPane_DSPH.setViewportView(panel_dsph);
+		panel_dsph.setLayout(new GridLayout(0, 5, -50, 0));
+
+		JPanel pnl_chucnangTimKH = new JPanel();
+		pnl_chucnangTimKH.setLayout(null);
+		pnl_chucnangTimKH.setBackground(Color.WHITE);
+		pnl_chucnangTimKH.setBounds(149, 0, 871, 36);
+		pnl_danhsachphonghat.add(pnl_chucnangTimKH);
+
+		JLabel lblNewLabel_4 = new JLabel("Tìm khách");
+		lblNewLabel_4.setBounds(39, 5, 64, 23);
+		pnl_chucnangTimKH.add(lblNewLabel_4);
+
+		textFieldTìmKhachDaThue = new JTextField();
+		textFieldTìmKhachDaThue.setColumns(10);
+		textFieldTìmKhachDaThue.setBounds(113, 5, 195, 24);
+		pnl_chucnangTimKH.add(textFieldTìmKhachDaThue);
+
+		JButton btnTimKhach = new JButton("");
+		btnTimKhach.setIcon(new ImageIcon(GD_TraPhong.class.getResource("/Imgs/search.png")));
+		btnTimKhach.setBounds(318, 5, 53, 25);
+		pnl_chucnangTimKH.add(btnTimKhach);
+		btnTimKhach.addActionListener(new ActionListener() {
+
+			@Override
+			public void actionPerformed(ActionEvent e) {
+				// TODO Auto-generated method stub
+				String phone = textFieldTìmKhachDaThue.getText();
+				String maPhongdeTim = "";
+				String url = "jdbc:sqlserver://localhost:1433;databasename=Karaoke4T";
+				String username = "sa";
+				String password = "123";
+
+				
+				
+				List<String> listTam = new ArrayList<>();
+
+				try {
+					// Kết nối đến cơ sở dữ liệu
+					Connection connection = DriverManager.getConnection(url, username, password);
+
+					String sqlPhongKH = "Select p.maPhong from HoaDon hd inner join ChiTietHoaDon cthd on hd.maHD = cthd.maHD \r\n"
+							+ "inner join KhachHang kh on hd.maKH = kh.maKH\r\n"
+							+ "inner join Phong p on cthd.maPhong = p.maPhong\r\n"
+							+ "inner join TrangThaiPhong ttp on p.maTTP = ttp.maTTP\r\n"
+							+ "where SDT = ? and p.maTTP = 'TTP001' and tienKhachTra = 0";
+					PreparedStatement statementPhongKH = connection.prepareStatement(sqlPhongKH);
+					statementPhongKH.setString(1, phone);
+
+					ResultSet resultSetPhongKH = statementPhongKH.executeQuery();
+					while (resultSetPhongKH.next()) {
+						maPhongdeTim = resultSetPhongKH.getString("maPhong");
+						listTam.add(maPhongdeTim);
+					}
+					List<Phong> loadedRooms = loadPhongHatByMaPhong(listTam);
+					draw(loadedRooms);
+				} catch (SQLException sqle) {
+					sqle.printStackTrace();
+				}
+			}
+		});
+
+		for (Phong ph : listph) {
+			if (ph.getTrangThaiPhong().getMaTrangThai().equals("TTP001")) {
+
+				// load label cha
+				JPanel pn_phonghat = new JPanel();
+				pn_phonghat.setBackground(new Color(255, 255, 255, 0));
+
+//        		pn_phonghat.setBorder(LineBorder.createBlackLineBorder());
+				pn_phonghat.setLayout(null);
+				pn_phonghat.setPreferredSize(new Dimension(200, 200));
+				panel_dsph.add(pn_phonghat);
+				//
+//        		
+//        		//load suc chua
+				JLabel lbl_succhua = new JLabel("Sức chứa : " + ph.getSoNguoi());
+				lbl_succhua.setHorizontalAlignment(SwingConstants.CENTER);
+				lbl_succhua.setFont(new Font("Tahoma", Font.BOLD, 11));
+				lbl_succhua.setForeground(new Color(255, 0, 0));
+				lbl_succhua.setBounds(55, 130, 80, 35);
+				pn_phonghat.add(lbl_succhua);
+
+				// load ten phong
+				JLabel lbl_tenphong = new JLabel(ph.getTenPhong());
+				lbl_tenphong.setFont(new Font("Tahoma", Font.BOLD, 13));
+				lbl_tenphong.setHorizontalAlignment(SwingConstants.CENTER);
+				lbl_tenphong.setBounds(55, 145, 80, 35);
+				pn_phonghat.add(lbl_tenphong);
+
+				// load hinh anh
+				JLabel lbl_hinhanh = new JLabel("");
+				lbl_hinhanh.setHorizontalAlignment(SwingConstants.CENTER);
+				lbl_hinhanh.setBounds(50, 50, 88, 85);
+				pn_phonghat.add(lbl_hinhanh);
+				lbl_hinhanh.setBorder(LineBorder.createBlackLineBorder());
+
+				// phan loai phong
+				if (ph.getLoaiPhong().getTenLoaiPhong().equals("Phòng Thường")) {
+					lbl_hinhanh.setIcon(new ImageIcon(GD_PhongHat.class.getResource("/Imgs/micro_gray.png")));
+				} else {
+					lbl_hinhanh.setIcon(new ImageIcon(GD_PhongHat.class.getResource("/Imgs/micro_crown_gray.png")));
+				}
+
+				JPanel pnl_chuaNutTraPhong = new JPanel();
+				pnl_chuaNutTraPhong.setBackground(new Color(255, 255, 255));
+				pnl_chuaNutTraPhong.setBounds(50, 165, 100, 40);
+				pn_phonghat.add(pnl_chuaNutTraPhong);
+
+				pn_phonghat.addMouseListener(new MouseAdapter() {
+					JButton btnTraPhong = new JButton("Trả phòng");
+
+					@Override
+					public void mouseEntered(MouseEvent e) {
+						btnTraPhong.setBounds(50, 180, 100, 25);
+						btnTraPhong.setBackground(new Color(255, 0, 0, 70));
+						btnTraPhong.setForeground(new Color(255, 255, 255));
+						btnTraPhong.setVisible(true);
+						pnl_chuaNutTraPhong.add(btnTraPhong);
+
+					}
+
+					@Override
+					public void mouseClicked(MouseEvent e) {
+
+						String url = "jdbc:sqlserver://localhost:1433;databasename=Karaoke4T";
+						String username = "sa";
+						String password = "123";
+
+						@SuppressWarnings("unused")
+						String maKH = "";
+						@SuppressWarnings("unused")
+						String maNV = "";
+						@SuppressWarnings("unused")
+						String gioNhanPhong = "";
+						String tongThoiLuong = "";
+						String tongTienDV = "";
+						String tongTienPhong = "";
+						Double tongTienHoaDon = 0.0;
+
+						LocalDateTime currentDateTime = LocalDateTime.now();
+
+						// Định dạng ngày giờ theo ý muốn
+						DateTimeFormatter formatter = DateTimeFormatter.ofPattern("yyyy-MM-dd HH:mm:ss");
+
+						// Chuyển đổi thành chuỗi
+						String gioKetThuc = currentDateTime.format(formatter);
+
+						try {
+							// Kết nối đến cơ sở dữ liệu
+							Connection connection = DriverManager.getConnection(url, username, password);
+							String maHD = "";
+
+							String sqlMaHD = "SELECT maHD FROM ChiTietHoaDon WHERE maHD = (SELECT MAX(maHD) FROM ChiTietHoaDon WHERE maPhong = ?)";
+							PreparedStatement statementMaHD = connection.prepareStatement(sqlMaHD);
+							statementMaHD.setString(1, ph.getMaPhong());
+
+							ResultSet resultSetMaHD = statementMaHD.executeQuery();
+
+							while (resultSetMaHD.next()) {
+								maHD = resultSetMaHD.getString(1);
+							}
+
+							String sqlUpdateGioKT = "UPDATE [dbo].[HoaDon] SET [gioKetThuc] = ? WHERE [maHD] = ?";
+
+							PreparedStatement statementgioKT = connection.prepareStatement(sqlUpdateGioKT);
+							statementgioKT.setString(1, gioKetThuc);
+							statementgioKT.setString(2, maHD);
+							int rowsUpdated = statementgioKT.executeUpdate();
+
+							String sqlTongThoiLuong = "SELECT DATEDIFF(MINUTE, gioNhanPhong, gioKetThuc) AS tongThoiLuong\r\n"
+									+ "FROM HoaDon where maHD = ?";
+							PreparedStatement statementTTL = connection.prepareStatement(sqlTongThoiLuong);
+							statementTTL.setString(1, maHD);
+							ResultSet resultSetTTL = statementTTL.executeQuery();
+
+							while (resultSetTTL.next()) {
+								tongThoiLuong = resultSetTTL.getString("tongThoiLuong");
+							}
+
+							String sqlLoadCTHD = "UPDATE ChiTietHoaDon SET thoiLuong = ? where maHD = ?";
+							PreparedStatement statementLoadTTL = connection.prepareStatement(sqlLoadCTHD);
+							statementLoadTTL.setString(1, tongThoiLuong);
+							statementLoadTTL.setString(2, maHD);
+
+							statementLoadTTL.executeUpdate();
+
+							String sqlLayTienDV = "SELECT SUM(ctdv.soLuong * dv.donGia) AS TongTienDV \r\n"
+									+ "FROM ChiTietDichVu ctdv\r\n" + "INNER JOIN DichVu dv ON ctdv.maDV = dv.maDV\r\n"
+									+ "INNER JOIN HoaDon hd ON ctdv.maHD = hd.maHD\r\n"
+									+ "WHERE ctdv.maHD = ? GROUP BY ctdv.maHD";
+							PreparedStatement statementTienDV = connection.prepareStatement(sqlLayTienDV);
+							statementTienDV.setString(1, maHD);
+
+							ResultSet resultSetTienDV = statementTienDV.executeQuery();
+
+							while (resultSetTienDV.next()) {
+								tongTienDV = resultSetTienDV.getString("TongTienDV");
+							}
+
+							String sqlLayTienPhong = "SELECT FLOOR((giaTien / 60) * thoiLuong) as TienPhong "
+									+ "FROM Phong p inner join LoaiPhong lp on p.maLP = lp.maLP "
+									+ "inner join ChiTietHoaDon cthd on p.maPhong = cthd.maPhong WHERE cthd.maHD = ?";
+							PreparedStatement statementTienPhong = connection.prepareStatement(sqlLayTienPhong);
+							statementTienPhong.setString(1, maHD);
+
+							ResultSet resultSetTienPhong = statementTienPhong.executeQuery();
+
+							while (resultSetTienPhong.next()) {
+								tongTienPhong = resultSetTienPhong.getString("TienPhong");
+
+							}
+							
+							
+							if (!tongTienDV.isEmpty()) {
+								tongTienHoaDon = Double.parseDouble(tongTienDV) + Double.parseDouble(tongTienPhong);
+							} else {
+								tongTienHoaDon = Double.parseDouble(tongTienPhong);
+							}
+
+							
+							GD_TinhTien tinhTien = new GD_TinhTien();
+							tinhTien.maHD = maHD;
+							tinhTien.lbl_gioTraPhong.setText(gioKetThuc);
+//							tinhTien.lbl_tongCong.setText(tongTienHoaDon.toString());
+							tinhTien.lbl_tongCong.setText(formatCurrency(tongTienHoaDon));
+							tinhTien.loadThongTinTinhTien(ph.getMaPhong(), gioKetThuc, tongThoiLuong, tongTienDV,
+									tongTienPhong, tongTienHoaDon);
+							tinhTien.loadChiTietDichVuDaDat(maHD);
+							
+							String layTenNV = lbltenql.getText();
+							System.out.println(layTenNV);
+							tinhTien.nhanTenNhanVien(layTenNV);
+							tinhTien.setVisible(true);
+
+							
+							
+							resultSetMaHD.close();
+							statementMaHD.close();
+							resultSetTTL.close();
+							statementTTL.close();
+							resultSetTienDV.close();
+							statementTienDV.close();
+							statementgioKT.close();
+							statementLoadTTL.close();
+
+							connection.close();
+							System.out.println(rowsUpdated);
+
+							dispose();
+						} catch (SQLException e1) {
+							e1.printStackTrace();
+						}
+					}
+
+					@Override
+					public void mouseExited(MouseEvent e) {
+						pnl_chuaNutTraPhong.add(btnTraPhong);
+						btnTraPhong.setVisible(false);
+					}
+				});
+			}
+		}
+	}
+
+	public List<Phong> loadPhongHatByMaPhong(List<String> maPhong) {
+		QLPH_DAO ds = new QLPH_DAO();
+		List<Phong> filteredList = new ArrayList<>();
+
+		try {
+			int i = 0;
+			ArrayList<Phong> listPhong = ds.docbang();
+
+			// Filter rooms based on the provided room code
+			for (Phong ph : listPhong) {
+				if (i < maPhong.size()) {
+					if (ph.getMaPhong().equals(maPhong.get(i))) {
+						filteredList.add(ph);
+						i++;
+					}
+				}
+			}
+
+			if (filteredList.isEmpty()) {
+				JOptionPane.showMessageDialog(this, "Không có dữ liệu phòng hát có mã phòng " + maPhong, "Thông báo",
+						JOptionPane.INFORMATION_MESSAGE);
+			}
+		} catch (Exception e) {
+			e.printStackTrace();
+			JOptionPane.showMessageDialog(this, "Lỗi khi tải dữ liệu phòng hát.", "Lỗi", JOptionPane.ERROR_MESSAGE);
+		}
+
+		return filteredList;
+	}
+//	public void loadGiaoDienTinhTien(MouseEvent e) {
+//		GD_TinhTien tinhTien = new GD_TinhTien();
+//		tinhTien.setVisible(true);
+//		tinhTien.setLocationRelativeTo(null);
+//		
+//		tinhTien.loadTinhTienTuDuLieuNhap(maPhong, tenKH, sdt, cmnd, diaChi, songuoi, giaTien);
+//        dispose();
+//	}
+
+//	private void initComponents() {
+//
+//        setDefaultCloseOperation(javax.swing.WindowConstants.EXIT_ON_CLOSE);
+//        addWindowListener(new java.awt.event.WindowAdapter() {
+//            public void windowClosing(java.awt.event.WindowEvent evt) {
+//                formWindowClosing(evt);
+//            }
+//        });
+//
+//        javax.swing.GroupLayout layout = new javax.swing.GroupLayout(getContentPane());
+//        getContentPane().setLayout(layout);
+//        layout.setHorizontalGroup(
+//            layout.createParallelGroup(javax.swing.GroupLayout.Alignment.LEADING)
+//            .addGap(0, 400, Short.MAX_VALUE)
+//        );
+//        layout.setVerticalGroup(
+//            layout.createParallelGroup(javax.swing.GroupLayout.Alignment.LEADING)
+//            .addGap(0, 300, Short.MAX_VALUE)
+//        );
+//
+//        pack();
+//    }
+
+    private void formWindowClosing(java.awt.event.WindowEvent evt) {//GEN-FIRST:event_formWindowClosing
+         GD_Main_NV mainnv=new GD_Main_NV();
+         mainnv.setVisible(true);
+    }
+
+//	
+	public void actionPerformed(ActionEvent e) {
+		if (e.getSource() == timer) {
+			// Cập nhật thời gian
+			updateClock();
+		}
+	}
+
+	private void updateClock() {
+		Calendar cal = Calendar.getInstance();
+		int hour = cal.get(Calendar.HOUR_OF_DAY);
+		int minute = cal.get(Calendar.MINUTE);
+		int second = cal.get(Calendar.SECOND);
+		int day = cal.get(Calendar.DAY_OF_MONTH);
+		int month = cal.get(Calendar.MONTH) + 1;
+		int year = cal.get(Calendar.YEAR);
+
+		String ampm;
+		if (hour >= 12) {
+			ampm = "PM";
+			if (hour > 24) {
+				hour -= 12;
+			}
+		} else {
+			ampm = "AM";
+			if (hour == 0) {
+				hour = 12;
+			}
+		}
+
+		String time = String.format("%02d:%02d:%02d %s  %04d/%02d/%02d", hour, minute, second, ampm, year, month, day);
+		lblClock.setText(time);
+	}
+}

@@ -1,0 +1,598 @@
+package GiaoDien;
+
+import javax.swing.JFrame;
+import javax.swing.JPanel;
+import javax.swing.JScrollPane;
+import javax.swing.border.EmptyBorder;
+import javax.swing.event.ListSelectionEvent;
+import javax.swing.table.DefaultTableModel;
+
+import Entity.CustomDashedLineSeparator;
+
+import java.awt.Color;
+import java.awt.Desktop;
+
+import javax.swing.JLabel;
+import javax.swing.JOptionPane;
+
+import java.awt.Font;
+import java.awt.event.ActionEvent;
+import java.awt.event.ActionListener;
+import java.io.File;
+import java.io.FileOutputStream;
+import java.sql.Connection;
+import java.sql.DriverManager;
+import java.sql.PreparedStatement;
+import java.sql.ResultSet;
+import java.sql.SQLException;
+
+import javax.swing.JTable;
+import javax.swing.JTextField;
+import javax.swing.ListSelectionModel;
+import javax.swing.ScrollPaneConstants;
+import testbutton.Buttontest;
+import javax.swing.ImageIcon;
+import javax.swing.JButton;
+
+import com.itextpdf.text.BaseColor;
+import com.itextpdf.text.Chunk;
+import com.itextpdf.text.Document;
+import com.itextpdf.text.DocumentException;
+import com.itextpdf.text.Element;
+import com.itextpdf.text.PageSize;
+import com.itextpdf.text.Paragraph;
+import com.itextpdf.text.Rectangle;
+import com.itextpdf.text.pdf.BaseFont;
+import com.itextpdf.text.pdf.PdfPCell;
+import com.itextpdf.text.pdf.PdfPTable;
+import com.itextpdf.text.pdf.PdfWriter;
+
+import java.text.SimpleDateFormat;
+import java.util.Date;
+
+
+public class GD_QuanLyPhieuDatPhong extends JFrame {
+	/**
+	 * 
+	 */
+	private static final long serialVersionUID = 1L;
+	private JPanel contentPane;
+	JTextField txt_maPhieuDat;
+	JLabel lbl_timPhieuDP;
+	String maHD, layMaPhong,layPhieu;
+	CustomDashedLineSeparator custom;
+	private JTable table = new JTable();
+	private DefaultTableModel model = (DefaultTableModel) table.getModel();
+	private JTextField txt_soDienThoai;
+	
+	/**
+	 * Launch the application.
+	 */
+	
+	/**
+	 * Create the frame.
+	 */
+	public GD_QuanLyPhieuDatPhong() {    
+		setResizable(false);
+		setDefaultCloseOperation(JFrame.EXIT_ON_CLOSE);
+		setBounds(100, 100, 853, 489);
+		setTitle("TÌM PHIẾU ĐẶT PHÒNG");
+		contentPane = new JPanel();
+		contentPane.setBorder(new EmptyBorder(5, 5, 5, 5));
+
+		setContentPane(contentPane);
+		contentPane.setLayout(null);
+		
+		JPanel pnl_txt_tinhTien = new JPanel();
+		pnl_txt_tinhTien.setBackground(new Color(0, 139, 139));
+		pnl_txt_tinhTien.setBounds(0, 0, 839, 96);
+		contentPane.add(pnl_txt_tinhTien);
+		pnl_txt_tinhTien.setLayout(null);
+		
+		lbl_timPhieuDP = new JLabel("TÌM PHIẾU ĐẶT PHÒNG");
+		lbl_timPhieuDP.setForeground(new Color(255, 255, 255));
+		lbl_timPhieuDP.setBounds(231, 23, 383, 49);
+		pnl_txt_tinhTien.add(lbl_timPhieuDP);
+		lbl_timPhieuDP.setFont(new Font("Tahoma", Font.BOLD, 32));
+		
+		table = new JTable();
+		table.setBounds(41, 463, 729, -179);
+		contentPane.add(table);
+		
+		JLabel lbl_maphieudat = new JLabel("Mã phiếu đặt:");
+		lbl_maphieudat.setFont(new Font("Tahoma", Font.PLAIN, 20));
+		lbl_maphieudat.setBounds(26, 119, 139, 41);
+		contentPane.add(lbl_maphieudat);
+		
+		txt_maPhieuDat = new JTextField();
+		txt_maPhieuDat.setBounds(165, 117, 147, 41);
+		contentPane.add(txt_maPhieuDat);
+		txt_maPhieuDat.setColumns(10);
+		
+		JButton btntimkiem = new JButton("Tìm kiếm");
+		btntimkiem.setBackground(new Color(192, 192, 192));
+		btntimkiem.setFont(new Font("Tahoma", Font.PLAIN, 16));
+		btntimkiem.setIcon(new ImageIcon(GD_TaiKhoan.class.getResource("/Imgs/search.png")));
+		btntimkiem.setBounds(685, 117, 129, 39);
+		contentPane.add(btntimkiem);
+		
+	    JScrollPane scrollPane = new JScrollPane();
+	    scrollPane.setVerticalScrollBarPolicy(ScrollPaneConstants.VERTICAL_SCROLLBAR_ALWAYS);
+	    scrollPane.setBounds(26, 181, 788, 186);
+	    contentPane.add(scrollPane);
+	    
+	    table = new JTable();
+	    scrollPane.setViewportView(table);
+	    
+	    model.addColumn("Mã phiếu đặt");
+	    model.addColumn("Mã phòng");
+	    model.addColumn("SĐT Khách");
+	    model.addColumn("Thời gian lập phiếu");
+	    model.addColumn("Thời gian nhận phòng");
+	    model.addColumn("Tình trạng");
+	    table.setModel(model);
+	    
+	 // Tạo một ListSelectionModel
+        ListSelectionModel selectionModel = table.getSelectionModel();
+        selectionModel.setSelectionMode(ListSelectionModel.SINGLE_SELECTION);
+
+        // Đăng ký sự kiện cho sự kiện lựa chọn hàng
+        selectionModel.addListSelectionListener((ListSelectionEvent e) -> {
+            if (!e.getValueIsAdjusting()) {
+                int selectedRow = table.getSelectedRow();
+                if (selectedRow != -1) { // Đảm bảo rằng đã chọn một hàng
+                    Object maPhieuDat = table.getValueAt(selectedRow, 0);
+                    Object maPhong = table.getValueAt(selectedRow, 1);
+
+                    layPhieu = (String) maPhieuDat;
+                    layMaPhong = (String) maPhong;
+                }
+            }
+        });
+        
+	    Buttontest btntstNhanPhong = new Buttontest();
+	    btntstNhanPhong.setText("Nhận phòng");
+	    btntstNhanPhong.setForeground(Color.WHITE);
+	    btntstNhanPhong.setFont(new Font("Tahoma", Font.BOLD, 13));
+	    btntstNhanPhong.setBorder(null);
+	    btntstNhanPhong.setBackground(new Color(255, 60, 60));
+	    btntstNhanPhong.setBounds(699, 384, 115, 48);
+	    btntstNhanPhong.setRippleColor(new Color(255, 255, 255));
+	    btntstNhanPhong.setShadowColor(new Color(0,0,0));
+	    contentPane.add(btntstNhanPhong);
+	    
+	    btntstNhanPhong.addActionListener(new ActionListener() {
+			@Override
+			public void actionPerformed(ActionEvent e) {
+				// TODO Auto-generated method stub
+				GD_DatPhong dp = new GD_DatPhong();
+				capNhatTrangThaiChoThanhBan(layMaPhong);
+				capNhatTinhTrangPhieu(layPhieu);
+				dp.theoDoiThaoTac("Bạn vừa nhận phòng: ", layMaPhong);
+				JOptionPane.showMessageDialog(null,"Nhận phòng: " + layMaPhong + " thành công ");
+				loadPhieuDatPhong();
+				
+				int result = JOptionPane.showConfirmDialog(null, "Bạn có muốn đặt dịch vụ không?", "Thông báo", JOptionPane.YES_NO_OPTION);
+
+		        if (result == JOptionPane.YES_OPTION) {
+		            // Xử lý khi người dùng chọn "Yes"
+		            System.out.println("Bạn đã chọn Yes.");
+		            GD_DatDichVu datdv = new GD_DatDichVu();
+		            datdv.setDefaultCloseOperation(JFrame.DISPOSE_ON_CLOSE);
+		            datdv.setVisible(true);
+					dispose();
+		        } else {
+		            // Xử lý khi người dùng chọn "No"
+		            System.out.println("Bạn đã chọn No hoặc đóng cửa sổ.");
+		        }
+			}
+		});
+	    
+	    Buttontest btntstXutPdf = new Buttontest();
+	    btntstXutPdf.setText("Xuất PDF");
+	    btntstXutPdf.setForeground(Color.WHITE);
+	    btntstXutPdf.setFont(new Font("Tahoma", Font.BOLD, 13));
+	    btntstXutPdf.setBorder(null);
+	    btntstXutPdf.setBackground(new Color(255, 165, 0));
+	    btntstXutPdf.setBounds(574, 384, 115, 48);
+	    btntstXutPdf.setRippleColor(new Color(255, 255, 255));
+	    btntstXutPdf.setShadowColor(new Color(0,0,0));
+	    btntstXutPdf.addActionListener(new ActionListener() {
+	        @Override
+	        public void actionPerformed(ActionEvent e) {
+	            printPDF(layPhieu, layMaPhong);
+	        }
+
+			private void printPDF(String maPhieuDat, String maPhong) {
+				// TODO Auto-generated method stub
+            	Document document = new Document(PageSize.A4.rotate());
+            	 try {
+                     String fileName = "PDF/ThongTinPhieuDatPhong_" + maPhieuDat + ".pdf";
+
+                     PdfWriter.getInstance(document, new FileOutputStream(fileName));
+                     document.open();
+
+                     BaseFont unicodeFont = BaseFont.createFont("Tahoma Regular font.ttf", BaseFont.IDENTITY_H,
+                             BaseFont.EMBEDDED);
+                     com.itextpdf.text.Font vietnameseFont = new com.itextpdf.text.Font(unicodeFont, 18,
+                             com.itextpdf.text.Font.NORMAL);
+
+                     // Add content to the PDF document
+                     addContent(maPhieuDat, maPhong, document, vietnameseFont);
+
+                     // Close the document
+                     document.close();
+                     
+                     // Mở file PDF sau khi đã lưu
+                     Desktop.getDesktop().open(new File(fileName));
+                     
+                     // Display a message indicating successful PDF creation
+                     JOptionPane.showMessageDialog(contentPane, "ĐÃ XUẤT FILE PDF!", "Success",
+                             JOptionPane.PLAIN_MESSAGE);
+                 } catch (Exception e) {
+                     e.printStackTrace();
+                 }
+			}
+
+			private void addContent(String maPhieuDat, String maPhong, Document document, com.itextpdf.text.Font vietnameseFont) throws DocumentException {			
+				String tenKH = "";
+				String soCMND = "";
+				String diaChi = "";
+				String sdtKhach = "";
+	            String thoiGianLapPhieu = "";
+	            String thoiGianNhanPhong = "";
+	            String tinhTrangPhieu = "";
+
+	            // Thực hiện truy vấn để lấy thông tin từ cơ sở dữ liệu
+	            String url = "jdbc:sqlserver://localhost:1433;databasename=Karaoke4T";
+	            String username = "sa";
+	            String password = "123";
+	            
+	            try (Connection connection = DriverManager.getConnection(url, username, password)) {
+	                String sql = "SELECT tenKH , CMND , diaChi, SDT, thoiGianDangKyDatPhong, thoiGianNhanPhong, tinhTrangPhieu \r\n"
+	                		+ "FROM PhieuDatPhong p\r\n"
+	                		+ "inner join KhachHang kh\r\n"
+	                		+ "on p.maKH = kh.maKH\r\n"
+	                		+ "WHERE maPDP = ?";
+	                try (PreparedStatement statement = connection.prepareStatement(sql)) {
+	                    statement.setString(1, maPhieuDat);
+	                    try (ResultSet resultSet = statement.executeQuery()) {
+	                        if (resultSet.next()) {
+	                            tinhTrangPhieu = resultSet.getString("tinhTrangPhieu");
+	                        	tenKH = resultSet.getString("tenKH");
+	                        	soCMND = resultSet.getString("CMND");
+	                        	diaChi = resultSet.getString("diaChi");
+	                            sdtKhach = resultSet.getString("SDT");
+	                            thoiGianLapPhieu = formatDateTime(resultSet.getString("thoiGianDangKyDatPhong"), "MM/dd/yyyy " + "HH:mm:ss");
+	                            thoiGianNhanPhong = formatDateTime(resultSet.getString("thoiGianNhanPhong"), "MM/dd/yyyy " + "HH:mm:ss");
+	                        }
+	                    }
+	                }
+	            } catch (SQLException e2) {
+	                e2.printStackTrace();
+	            }
+				
+				document.add(new Paragraph("******************************************************************************", vietnameseFont));
+				Paragraph karaokeParagraph = new Paragraph("KARAOKE4T", vietnameseFont);
+			    karaokeParagraph.setAlignment(Element.ALIGN_CENTER); // Căn giữa đều
+			    document.add(karaokeParagraph);
+				document.add(new Paragraph("******************************************************************************", vietnameseFont));
+				
+				custom = new CustomDashedLineSeparator();
+				custom.setLineWidth(1);
+				custom.setOffset(5);
+				custom.setLineColor(BaseColor.BLACK);
+				document.add(new Chunk(custom));
+				
+				Paragraph phieudatphong = new Paragraph("THÔNG TIN PHIẾU ĐẶT PHÒNG", vietnameseFont);
+				phieudatphong.setAlignment(Element.ALIGN_CENTER); // Căn giữa đều
+			    document.add(phieudatphong);	
+			    
+				document.add(new Paragraph("\n"));
+				custom = new CustomDashedLineSeparator();
+				custom.setLineWidth(1);
+				custom.setOffset(5);
+				custom.setLineColor(BaseColor.BLACK);
+				document.add(new Chunk(custom));
+
+		        document.add(new Paragraph("Tình trạng phiếu: " + tinhTrangPhieu, vietnameseFont));
+		        document.add(new Paragraph("\n"));
+		        
+	            PdfPTable infoTable1 = new PdfPTable(2);
+			    infoTable1.setWidthPercentage(100);
+			    
+                PdfPCell cellMaPhieu = new PdfPCell(new Paragraph("Mã phiếu đặt: " + maPhieuDat, vietnameseFont));
+                cellMaPhieu.setBorder(Rectangle.NO_BORDER);
+                infoTable1.addCell(cellMaPhieu);
+                
+                PdfPCell cellMaPhong = new PdfPCell(new Paragraph("Mã phòng: " + maPhong, vietnameseFont));
+                cellMaPhong.setBorder(Rectangle.NO_BORDER);
+                cellMaPhong.setHorizontalAlignment(Element.ALIGN_RIGHT); // Căn phải
+                infoTable1.addCell(cellMaPhong);
+                infoTable1.completeRow();
+                document.add(infoTable1);
+                document.add(new Paragraph("\n"));
+		        
+	            PdfPTable infoTable2 = new PdfPTable(2);
+			    infoTable2.setWidthPercentage(100);
+			    
+                PdfPCell cellTen = new PdfPCell(new Paragraph("Tên khách hàng: " + tenKH, vietnameseFont));
+                cellTen.setBorder(Rectangle.NO_BORDER);
+                infoTable2.addCell(cellTen);
+                
+                PdfPCell cellCMND = new PdfPCell(new Paragraph("CMND: " + soCMND, vietnameseFont));
+                cellCMND.setBorder(Rectangle.NO_BORDER);
+                cellCMND.setHorizontalAlignment(Element.ALIGN_RIGHT); // Căn phải
+                infoTable2.addCell(cellCMND);
+                infoTable2.completeRow();
+                document.add(infoTable2);
+                document.add(new Paragraph("\n"));
+                
+                PdfPTable infoTable3 = new PdfPTable(2);
+                infoTable3.setWidthPercentage(100);
+			    
+                PdfPCell cellDiaChi = new PdfPCell(new Paragraph("Địa chỉ: " + diaChi, vietnameseFont));
+                cellDiaChi.setBorder(Rectangle.NO_BORDER);
+                infoTable3.addCell(cellDiaChi);
+                
+                PdfPCell cellsdt = new PdfPCell(new Paragraph("SĐT: " + sdtKhach, vietnameseFont));
+                cellsdt.setBorder(Rectangle.NO_BORDER);
+                cellsdt.setHorizontalAlignment(Element.ALIGN_RIGHT); // Căn phải
+                infoTable3.addCell(cellsdt);
+                infoTable3.completeRow();
+                document.add(infoTable3);
+                document.add(new Paragraph("\n"));
+                
+                PdfPTable infoTable4 = new PdfPTable(2);
+                infoTable4.setWidthPercentage(100);
+			    
+                PdfPCell cellTgLap = new PdfPCell(new Paragraph("Thời gian lập phiếu: " + thoiGianLapPhieu, vietnameseFont));
+                cellTgLap.setBorder(Rectangle.NO_BORDER);
+                infoTable4.addCell(cellTgLap);
+                
+                PdfPCell cellTgNhan = new PdfPCell(new Paragraph("Thời gian nhận phòng: " + thoiGianNhanPhong, vietnameseFont));
+                cellTgNhan.setBorder(Rectangle.NO_BORDER);
+                cellTgNhan.setHorizontalAlignment(Element.ALIGN_RIGHT); // Căn phải
+                infoTable4.addCell(cellTgNhan);
+                infoTable4.completeRow();
+                document.add(infoTable4);
+                document.add(new Paragraph("\n"));
+                
+                custom = new CustomDashedLineSeparator();
+ 				custom.setLineWidth(1);
+ 				custom.setOffset(5);
+ 				custom.setLineColor(BaseColor.BLACK);
+ 				document.add(new Chunk(custom));
+
+                Paragraph camOn = new Paragraph("Cảm ơn quý khách đã đến quán", vietnameseFont);
+                camOn.getFont().setStyle(com.itextpdf.text.Font.BOLDITALIC);
+                camOn.setAlignment(Element.ALIGN_CENTER); // Căn phải
+                document.add(camOn);
+			}
+	    });
+	    contentPane.add(btntstXutPdf);
+	    
+	    Buttontest btntstLmMi = new Buttontest();
+	    btntstLmMi.setText("Làm mới");
+	    btntstLmMi.setForeground(Color.WHITE);
+	    btntstLmMi.setFont(new Font("Tahoma", Font.BOLD, 13));
+	    btntstLmMi.setBorder(null);
+	    btntstLmMi.setBackground(new Color(102, 205, 170));
+	    btntstLmMi.setBounds(151, 384, 115, 48);
+	    btntstLmMi.setRippleColor(new Color(255, 255, 255));
+	    btntstLmMi.setShadowColor(new Color(0,0,0));
+	    contentPane.add(btntstLmMi);
+	    btntstLmMi.addActionListener(new ActionListener() {
+			@Override
+			public void actionPerformed(ActionEvent e) {
+				// TODO Auto-generated method stub
+				lamMoi();
+			}
+		});
+	    
+	    Buttontest btntstQuayLi = new Buttontest();
+	    btntstQuayLi.setText("Quay lại");
+	    btntstQuayLi.setForeground(Color.WHITE);
+	    btntstQuayLi.setFont(new Font("Tahoma", Font.BOLD, 13));
+	    btntstQuayLi.setBorder(null);
+	    btntstQuayLi.setBackground(new Color(30, 144, 255));
+	    btntstQuayLi.setBounds(26, 384, 115, 48);
+	    btntstQuayLi.setRippleColor(new Color(255, 255, 255));
+	    btntstQuayLi.setShadowColor(new Color(0,0,0));
+	    contentPane.add(btntstQuayLi);
+	    
+	    JLabel lbl_SoDienThoai = new JLabel("Số điện thoại");
+	    lbl_SoDienThoai.setFont(new Font("Tahoma", Font.PLAIN, 20));
+	    lbl_SoDienThoai.setBounds(366, 119, 129, 41);
+	    contentPane.add(lbl_SoDienThoai);
+	    
+	    txt_soDienThoai = new JTextField();
+	    txt_soDienThoai.setColumns(10);
+	    txt_soDienThoai.setBounds(505, 117, 147, 41);
+	    contentPane.add(txt_soDienThoai);
+	    btntstQuayLi.addActionListener(new ActionListener() {
+			@Override
+			public void actionPerformed(ActionEvent e) {
+				// TODO Auto-generated method stub
+				GD_DatPhong dp = new GD_DatPhong();
+				dp.setVisible(true);
+				dispose();
+			}
+		});
+	    
+	    btntimkiem.addActionListener(new ActionListener() {
+			@Override
+			public void actionPerformed(ActionEvent e) {
+				// TODO Auto-generated method stub
+				String maPhieu = txt_maPhieuDat.getText();
+				String sdt = txt_soDienThoai.getText();
+				timPhieu(maPhieu,sdt);
+			}
+		});
+	    loadPhieuDatPhong();
+	}	
+	public void loadPhieuDatPhong() {
+		// Thông tin kết nối đến cơ sở dữ liệu
+        String url = "jdbc:sqlserver://localhost:1433;databasename=Karaoke4T";
+        String username = "sa";
+        String password = "123";
+        try {
+            // Kết nối đến cơ sở dữ liệu
+            Connection connection = DriverManager.getConnection(url, username, password);
+	        String sql = "select maPDP,maPhong,SDT,thoiGianDangKyDatPhong,thoiGianNhanPhong,tinhTrangPhieu\r\n"
+	        		+ "from PhieuDatPhong p\r\n"
+	        		+ "inner join KhachHang kh\r\n"
+	        		+ "on p.maKH = kh.maKH\r\n"
+	        		+ "where tinhTrangPhieu = 1";
+	        PreparedStatement statement = connection.prepareStatement(sql);	   
+	        ResultSet resultSet = statement.executeQuery();
+
+	        // Xóa dữ liệu cũ trong bảng
+	        model.setRowCount(0);
+	        while (resultSet.next()) {
+	            String maPDP = resultSet.getString("maPDP");
+	            String maPhong = resultSet.getString("maPhong");
+	            String sdtKhach = resultSet.getString("SDT");
+//	            String thoiGianLap = resultSet.getString("thoiGianDangKyDatPhong");  
+//	            String thoiGianNhan = resultSet.getString("thoiGianNhanPhong");
+	            String thoiGianLap = formatDateTime(resultSet.getString("thoiGianDangKyDatPhong"), "MM/dd/yyyy " + "HH:mm:ss");
+                String thoiGianNhan = formatDateTime(resultSet.getString("thoiGianNhanPhong"), "MM/dd/yyyy " + "HH:mm:ss");
+	            Boolean tinhTrangPhieu = resultSet.getBoolean("tinhTrangPhieu");
+	            System.out.println(tinhTrangPhieu);
+	            
+	            String tinhTrangPhieuDatPhong;
+	            if (tinhTrangPhieu == true) {
+	            	tinhTrangPhieuDatPhong = "Còn hiệu lực";
+	            }
+	            else {
+	            	tinhTrangPhieuDatPhong = "Hết hiệu lực";
+	            }
+	            // Thêm dòng mới vào bảng
+	            Object [] ds = {maPDP,maPhong,sdtKhach,thoiGianLap,thoiGianNhan,tinhTrangPhieuDatPhong};
+	            model.addRow(ds);
+//	            System.out.println(ds);
+	        }table.setModel(model);
+	    } catch (SQLException e) {
+	        e.printStackTrace();
+	    }
+	}
+	public void timPhieu(String maPhieu,String Sdt) {
+		// Thông tin kết nối đến cơ sở dữ liệu
+        String url = "jdbc:sqlserver://localhost:1433;databasename=Karaoke4T";
+        String username = "sa";
+        String password = "123";
+        try {
+            // Kết nối đến cơ sở dữ liệu
+            Connection connection = DriverManager.getConnection(url, username, password);
+
+	        String sql = "select maPDP,maPhong,SDT,thoiGianDangKyDatPhong,thoiGianNhanPhong,tinhTrangPhieu\r\n"
+	        		+ "from PhieuDatPhong p\r\n"
+	        		+ "inner join KhachHang kh\r\n"
+	        		+ "on p.maKH = kh.maKH\r\n"
+	        		+ "where maPDP = ? or SDT = ?";
+
+	        PreparedStatement statement = connection.prepareStatement(sql);
+	        statement.setString(1, maPhieu);
+	        statement.setString(2, Sdt);
+	        ResultSet resultSet = statement.executeQuery();
+	        
+	        // Xóa dữ liệu cũ trong bảng
+	        model.setRowCount(0);
+	        while (resultSet.next()) {
+	            String maPDP = resultSet.getString("maPDP");
+	            String maPhong = resultSet.getString("maPhong");
+	            String sdtKhach = resultSet.getString("SDT");
+//	            String thoiGianLap = resultSet.getString("thoiGianDangKyDatPhong");  
+//	            String thoiGianNhan = resultSet.getString("thoiGianNhanPhong");
+	            String thoiGianLap = formatDateTime(resultSet.getString("thoiGianDangKyDatPhong"), "MM/dd/yyyy " + "HH:mm:ss");
+                String thoiGianNhan = formatDateTime(resultSet.getString("thoiGianNhanPhong"), "MM/dd/yyyy " + "HH:mm:ss");
+	            String tinhTrangPhieu = resultSet.getString("tinhTrangPhieu");
+	            // Thêm dòng mới vào bảng
+	            Object [] ds = {maPDP,maPhong,sdtKhach,thoiGianLap,thoiGianNhan,tinhTrangPhieu};
+	            model.addRow(ds);
+	        }table.setModel(model);
+	    } catch (SQLException e) {
+	        e.printStackTrace();
+	    }
+	}
+	
+	public void capNhatTinhTrangPhieu(String maPhieu) {
+	    // Thông tin kết nối đến cơ sở dữ liệu
+	    String url = "jdbc:sqlserver://localhost:1433;databasename=Karaoke4T";
+	    String username = "sa";
+	    String password = "123";
+	    try {
+	        // Kết nối đến cơ sở dữ liệu
+	        Connection connection = DriverManager.getConnection(url, username, password);
+
+	        String sql = "update PhieuDatPhong set tinhTrangPhieu = 0 where maPDP = ?";
+
+	        PreparedStatement statement = connection.prepareStatement(sql);
+	        statement.setString(1, maPhieu);
+
+	        // Use executeUpdate() for update, insert, or delete operations
+	        int rowsAffected = statement.executeUpdate();
+
+	        // Optionally, you can check the number of rows affected
+	        if (rowsAffected > 0) {
+	            System.out.println("Update successful. Rows affected: " + rowsAffected);
+	        } else {
+	            System.out.println("Update failed. No rows affected.");
+	        }
+
+	        // Close resources
+	        statement.close();
+	        connection.close();
+
+	    } catch (SQLException e) {
+	        e.printStackTrace();
+	    }
+	}
+
+	public void capNhatTrangThaiChoThanhBan(String maPhong) {
+		// Thông tin kết nối đến cơ sở dữ liệu
+		String url = "jdbc:sqlserver://localhost:1433;databasename=Karaoke4T";
+		String username = "sa";
+		String password = "123";
+
+		try {
+			// Kết nối đến cơ sở dữ liệu
+			Connection connection = DriverManager.getConnection(url, username, password);
+
+			// Truy vấn SQL để cập nhật dữ liệu
+			String sql = "UPDATE Phong SET maTTP = 'TTP001' WHERE maPhong = ?";
+			PreparedStatement statement = connection.prepareStatement(sql);
+
+			// Thiết lập giá trị tham số cho mã phòng
+			statement.setString(1, maPhong);
+
+			// Thực hiện câu lệnh UPDATE
+			@SuppressWarnings("unused")
+			int rowsAffected = statement.executeUpdate();
+
+			// Đóng các tài nguyên
+			statement.close();
+			connection.close();
+		} catch (SQLException e) {
+			e.printStackTrace();
+		}
+	}
+	
+	public void lamMoi() {
+		txt_soDienThoai.setText("");
+		txt_maPhieuDat.setText("");
+	}
+	// Hàm để định dạng thời gian
+	private String formatDateTime(String dateTime, String pattern) {
+	    SimpleDateFormat inputFormat = new SimpleDateFormat("yyyy-MM-dd HH:mm:ss");
+	    SimpleDateFormat outputFormat = new SimpleDateFormat(pattern);
+
+	    try {
+	        Date date = inputFormat.parse(dateTime);
+	        return outputFormat.format(date);
+	    } catch (java.text.ParseException e) {
+	        e.printStackTrace();
+	        return dateTime; // Trả về nguyên gốc nếu có lỗi
+	    }
+	}
+}

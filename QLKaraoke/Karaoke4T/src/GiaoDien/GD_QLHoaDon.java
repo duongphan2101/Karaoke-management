@@ -1,0 +1,873 @@
+package GiaoDien;
+
+
+import javax.swing.JFrame;
+import javax.swing.JPanel;
+import javax.swing.JScrollBar;
+import javax.swing.table.DefaultTableModel;
+
+import java.awt.Color;
+import javax.swing.JLabel;
+import javax.swing.JOptionPane;
+
+import java.awt.Font;
+import java.awt.event.ActionEvent;
+import java.awt.event.ActionListener;
+import java.awt.event.KeyEvent;
+import java.awt.event.MouseAdapter;
+import java.awt.event.MouseEvent;
+import java.net.URL;
+import java.sql.Connection;
+import java.sql.DriverManager;
+import java.sql.PreparedStatement;
+import java.sql.ResultSet;
+import java.sql.SQLException;
+import java.text.DecimalFormat;
+import java.text.ParseException;
+import java.text.SimpleDateFormat;
+import java.util.Calendar;
+import java.util.Date;
+
+import javax.swing.JTextField;
+import javax.swing.KeyStroke;
+import javax.swing.SwingConstants;
+import javax.swing.Timer;
+
+import com.toedter.calendar.JDateChooser;
+import Entity.UserInfo;
+import connectDB.connectDB;
+
+import javax.swing.JButton;
+import javax.swing.AbstractAction;
+import javax.swing.BorderFactory;
+import javax.swing.ImageIcon;
+import javax.swing.JComponent;
+import javax.swing.JTable;
+import javax.swing.JScrollPane;
+import java.awt.Desktop;
+
+public class GD_QLHoaDon extends JFrame implements ActionListener{
+
+	/**
+	 * 
+	 */
+	private static final long serialVersionUID = 1L;
+	private JPanel contentPane;
+	private final Double VAT = 0.08;
+	private JTable table;
+	DefaultTableModel model;
+	private JTextField txt_tenKhach;
+	private JTextField txt_sdtKhach;
+	private JTextField txt_maHD;
+	private JDateChooser date_ngayLap;
+	private JLabel lblClock, lbltennv;
+	private Timer timer;
+	DecimalFormat currencyFormat = new DecimalFormat("###,###,### VND");
+
+	/**
+	 * Launch the application.
+	 */
+	
+	private String formatCurrency(double tienTe) {
+	    // Create a DecimalFormat with the desired format
+	    currencyFormat = new DecimalFormat("###,###,### VND");
+	    
+	    // Format the amount as currency
+	    String formattedAmount = currencyFormat.format(tienTe);
+	    
+	    return formattedAmount;
+	}
+	
+	/**
+	 * Create the frame.
+	 */
+	public GD_QLHoaDon() {
+		setBackground(Color.WHITE);
+		setResizable(false);
+		setTitle("Giao Diện Quản lý Hóa Đơn");
+		setDefaultCloseOperation(JFrame.DISPOSE_ON_CLOSE);
+		setLocationRelativeTo(null);
+		setBounds(100, 100, 1175, 650);
+		contentPane = new JPanel();
+		contentPane.setBorder(null);
+
+		setContentPane(contentPane);
+		contentPane.setLayout(null);
+		
+//		 Ho tro -----------------------
+		JButton btnNewButton = new JButton("");
+		btnNewButton.addActionListener(new ActionListener() {
+			public void actionPerformed(ActionEvent e) {
+				try {
+					Desktop.getDesktop().browse(new URL("https://thach1311.github.io/huongDan/").toURI());
+				}
+				catch(Exception ex){}
+			}
+		});
+		btnNewButton.setIcon(new ImageIcon(GD_QLHoaDon.class.getResource("/Imgs/iconHoTro.png")));
+		btnNewButton.setBounds(304, 10, 49, 50);
+		contentPane.add(btnNewButton);
+		
+//		------------------------------------------
+		
+		JLabel lblnhanvien = new JLabel("NV:");
+		lblnhanvien.setForeground(Color.WHITE);
+		lblnhanvien.setFont(new Font("Tahoma", Font.BOLD, 16));
+		lblnhanvien.setBounds(878, -20, 232, 80);
+		contentPane.add(lblnhanvien);
+		
+		lbltennv = new JLabel();
+		lbltennv.setForeground(Color.WHITE);
+		lbltennv.setFont(new Font("Tahoma", Font.BOLD, 16));
+		lbltennv.setBounds(833, 6, 232, 80);
+		lbltennv.setText(UserInfo.getTenNhanVien());
+		contentPane.add(lbltennv);
+		
+		JButton jButton = new JButton("Đăng Xuất");
+		jButton.setBounds(990, 10, 150, 50);
+		jButton.setFont(new Font("Tahoma ", Font.BOLD, 14));
+		jButton.setBackground(new Color(255, 0, 0));
+		jButton.setForeground(Color.WHITE);
+		
+		jButton.setBorder(BorderFactory.createLineBorder(Color.RED, 2, true));
+        jButton.setBorder(BorderFactory.createLineBorder(Color.RED, 2, true));
+        jButton.setContentAreaFilled(false);
+        jButton.setFocusPainted(false);
+        jButton.setOpaque(true);
+		contentPane.add(jButton);
+
+		jButton.addMouseListener(new MouseAdapter() {
+		    @Override
+		    public void mouseEntered(MouseEvent e) {
+		        jButton.setBackground(Color.BLACK);
+		    }
+
+		    @Override
+		    public void mouseExited(MouseEvent e) {
+		        jButton.setBackground(new Color(255, 0, 0));
+		    }
+		});
+
+		jButton.addActionListener(new ActionListener() {
+		    public void actionPerformed(ActionEvent e) {
+		        if (JOptionPane.showConfirmDialog(null, "Bạn có muốn đăng xuất!", null, JOptionPane.YES_NO_OPTION) == JOptionPane.YES_OPTION) {
+		            GD_Login lg = new GD_Login();
+		            lg.setVisible(true);
+		            lg.setLocationRelativeTo(null);
+		            dispose();
+		        }
+		    }
+		});
+		
+		JLabel lblavatar = new JLabel("");
+		lblavatar.setHorizontalAlignment(SwingConstants.CENTER);
+		lblavatar.setIcon(new ImageIcon(GD_QLHoaDon.class.getResource("/Imgs/t1 1.png")));
+		lblavatar.setBounds(90, -444, 1333, 957);
+		contentPane.add(lblavatar);
+		
+		JPanel box_clock = new JPanel();
+        box_clock.setBackground(new Color(255, 255, 255));
+        box_clock.setBounds(34, 10, 260, 50);
+        contentPane.add(box_clock);
+        box_clock.setLayout(null);
+
+        lblClock = new JLabel();
+        lblClock.setHorizontalAlignment(SwingConstants.CENTER);
+        lblClock.setFont(new Font("Tahoma", Font.PLAIN, 20));
+        lblClock.setBounds(10, 0, 240, 50);
+        lblClock.setForeground(Color.BLACK);
+        box_clock.add(lblClock);
+
+        timer = new Timer(0, this);
+        timer.start();
+		
+        testbutton.Buttontest btndatphong1 = new testbutton.Buttontest();
+        btndatphong1.addMouseListener(new MouseAdapter() {
+			@Override
+			public void mouseClicked(MouseEvent e) {
+				GD_DatPhong gddatphong = new GD_DatPhong();
+				gddatphong.setDefaultCloseOperation(JFrame.DISPOSE_ON_CLOSE);
+				gddatphong.setVisible(true);
+				dispose();
+			}
+		});
+        KeyStroke keyStrokeDatPhong = KeyStroke.getKeyStroke(KeyEvent.VK_F1, 0);
+        btndatphong1.getInputMap(JComponent.WHEN_IN_FOCUSED_WINDOW).put(keyStrokeDatPhong, "F1");
+        btndatphong1.getActionMap().put("F1", new AbstractAction() {
+            /**
+			 * 
+			 */
+			private static final long serialVersionUID = 1L;
+
+			@Override
+            public void actionPerformed(ActionEvent e) {
+                // Xử lý khi phím tắt được nhấn
+				GD_DatPhong gddatphong = new GD_DatPhong();
+				gddatphong.setDefaultCloseOperation(JFrame.DISPOSE_ON_CLOSE);
+				gddatphong.setVisible(true);
+				dispose();
+            }
+        });
+        btndatphong1.setBorder(null);
+        btndatphong1.setText("Đặt Phòng (F1)");
+        btndatphong1.setForeground(Color.WHITE);
+        btndatphong1.setFont(new Font("Tahoma", Font.BOLD, 18));
+        btndatphong1.setBackground(new Color(0,0,0, 150));
+        btndatphong1.setBounds(0, 70, 166, 87);
+		contentPane.add(btndatphong1);
+		btndatphong1.setLayout(null);
+        
+        testbutton.Buttontest btnthuephong = new testbutton.Buttontest();
+        btnthuephong.addMouseListener(new MouseAdapter() {
+			@Override
+			public void mouseClicked(MouseEvent e) {
+				GD_ThuePhong gdthuephong = new GD_ThuePhong();
+				gdthuephong.setDefaultCloseOperation(JFrame.DISPOSE_ON_CLOSE);
+				gdthuephong.setVisible(true);
+				dispose();
+			}
+		});
+        KeyStroke keyStrokeThuePhong = KeyStroke.getKeyStroke(KeyEvent.VK_F2, 0);
+        btnthuephong.getInputMap(JComponent.WHEN_IN_FOCUSED_WINDOW).put(keyStrokeThuePhong, "F2");
+        btnthuephong.getActionMap().put("F2", new AbstractAction() {
+            /**
+			 * 
+			 */
+			private static final long serialVersionUID = 1L;
+
+			@Override
+            public void actionPerformed(ActionEvent e) {
+                // Xử lý khi phím tắt được nhấn
+				GD_ThuePhong gdthuephong = new GD_ThuePhong();
+				gdthuephong.setDefaultCloseOperation(JFrame.DISPOSE_ON_CLOSE);
+				gdthuephong.setVisible(true);
+				dispose();
+            }
+        });
+        btnthuephong.setBorder(null);
+        btnthuephong.setText("Thuê Phòng (F2)");
+        btnthuephong.setForeground(Color.WHITE);
+        btnthuephong.setFont(new Font("Tahoma", Font.BOLD, 18));
+        btnthuephong.setBackground(new Color(0,0,0, 150));
+        btnthuephong.setBounds(165, 70, 166, 87);
+		contentPane.add(btnthuephong);
+		btnthuephong.setLayout(null);
+		
+        testbutton.Buttontest btndatdichvu = new testbutton.Buttontest();
+        btndatdichvu.addMouseListener(new MouseAdapter() {
+			@Override
+			public void mouseClicked(MouseEvent e) {
+				GD_DatDichVu gddv = new GD_DatDichVu();
+				gddv.setDefaultCloseOperation(JFrame.DISPOSE_ON_CLOSE);
+				gddv.setVisible(true);
+				dispose();
+			}
+		});
+        KeyStroke keyStrokeDatdv = KeyStroke.getKeyStroke(KeyEvent.VK_F3, 0);
+        btndatdichvu.getInputMap(JComponent.WHEN_IN_FOCUSED_WINDOW).put(keyStrokeDatdv, "F3");
+        btndatdichvu.getActionMap().put("F3", new AbstractAction() {
+            /**
+			 * 
+			 */
+			private static final long serialVersionUID = 1L;
+
+			@Override
+            public void actionPerformed(ActionEvent e) {
+                // Xử lý khi phím tắt được nhấn
+				GD_DatDichVu gddv = new GD_DatDichVu();
+				gddv.setDefaultCloseOperation(JFrame.DISPOSE_ON_CLOSE);
+				gddv.setVisible(true);
+				dispose();
+            }
+        });
+        btndatdichvu.setBorder(null);
+        btndatdichvu.setText("Đặt Dịch Vụ (F3)");
+        btndatdichvu.setForeground(Color.WHITE);
+        btndatdichvu.setFont(new Font("Tahoma", Font.BOLD, 18));
+        btndatdichvu.setBackground(new Color(0, 0, 0, 150));
+        btndatdichvu.setBounds(332, 70, 166, 87);
+		contentPane.add(btndatdichvu);
+		btndatdichvu.setLayout(null);
+        
+        testbutton.Buttontest btntstTrPhng = new testbutton.Buttontest();
+        btntstTrPhng.addMouseListener(new MouseAdapter() {
+			@Override
+			public void mouseClicked(MouseEvent e) {
+				GD_TraPhong gdtraphong = new GD_TraPhong();
+				gdtraphong.setDefaultCloseOperation(JFrame.DISPOSE_ON_CLOSE);
+				gdtraphong.setVisible(true);
+				dispose();
+			}
+		});
+        KeyStroke keyStrokeTrPhong = KeyStroke.getKeyStroke(KeyEvent.VK_F4, 0);
+        btntstTrPhng.getInputMap(JComponent.WHEN_IN_FOCUSED_WINDOW).put(keyStrokeTrPhong, "F4");
+        btntstTrPhng.getActionMap().put("F4", new AbstractAction() {
+            /**
+			 * 
+			 */
+			private static final long serialVersionUID = 1L;
+
+			@Override
+            public void actionPerformed(ActionEvent e) {
+                // Xử lý khi phím tắt được nhấn
+				GD_TraPhong gdtraphong = new GD_TraPhong();
+				gdtraphong.setDefaultCloseOperation(JFrame.DISPOSE_ON_CLOSE);
+				gdtraphong.setVisible(true);
+				dispose();
+            }
+        });
+        btntstTrPhng.setBorder(null);
+        btntstTrPhng.setText("Trả Phòng (F4)");
+        btntstTrPhng.setForeground(Color.WHITE);
+        btntstTrPhng.setFont(new Font("Tahoma", Font.BOLD, 18));
+        btntstTrPhng.setBackground(new Color(0,0,0, 150));
+        btntstTrPhng.setBounds(496, 70, 165, 87);
+        contentPane.add(btntstTrPhng);
+        btntstTrPhng.setLayout(null);
+        
+        testbutton.Buttontest btnkhachhang = new testbutton.Buttontest();
+        btnkhachhang.addMouseListener(new MouseAdapter() {
+			@Override
+			public void mouseClicked(MouseEvent e) {
+				GD_QuanLyKhachHang gdqlykhachhang = new GD_QuanLyKhachHang();
+				gdqlykhachhang.setDefaultCloseOperation(JFrame.DISPOSE_ON_CLOSE);
+				gdqlykhachhang.setVisible(true);
+				dispose();
+			}
+		});
+        KeyStroke keyStrokeQLKH = KeyStroke.getKeyStroke(KeyEvent.VK_F5, 0);
+        btnkhachhang.getInputMap(JComponent.WHEN_IN_FOCUSED_WINDOW).put(keyStrokeQLKH, "F5");
+        btnkhachhang.getActionMap().put("F5", new AbstractAction() {
+            /**
+			 * 
+			 */
+			private static final long serialVersionUID = 1L;
+
+			@Override
+            public void actionPerformed(ActionEvent e) {
+                // Xử lý khi phím tắt được nhấn
+				GD_QuanLyKhachHang gdqlykhachhang = new GD_QuanLyKhachHang();
+				gdqlykhachhang.setDefaultCloseOperation(JFrame.DISPOSE_ON_CLOSE);
+				gdqlykhachhang.setVisible(true);
+				dispose();
+            }
+        });
+        btnkhachhang.setBorder(null);
+        btnkhachhang.setText("Khách Hàng (F5)");
+        btnkhachhang.setForeground(Color.WHITE);
+        btnkhachhang.setFont(new Font("Tahoma", Font.BOLD, 18));
+        btnkhachhang.setBackground(new Color(0, 0, 0, 150));
+        btnkhachhang.setBounds(660, 70, 166, 87);
+		contentPane.add(btnkhachhang);
+		btnkhachhang.setLayout(null);
+		
+		testbutton.Buttontest btnhoadon = new testbutton.Buttontest();
+		btnhoadon.addMouseListener(new MouseAdapter() {
+			@Override
+			public void mouseClicked(MouseEvent e) {
+				GD_QLHoaDon gdqlhoadon = new GD_QLHoaDon();
+				gdqlhoadon.setDefaultCloseOperation(JFrame.DISPOSE_ON_CLOSE);
+				gdqlhoadon.setVisible(true);
+				dispose();
+			}
+		});
+		KeyStroke keyStrokeQLHD = KeyStroke.getKeyStroke(KeyEvent.VK_F6, 0);
+		btnhoadon.getInputMap(JComponent.WHEN_IN_FOCUSED_WINDOW).put(keyStrokeQLHD, "F6");
+		btnhoadon.getActionMap().put("F6", new AbstractAction() {
+            /**
+			 * 
+			 */
+			private static final long serialVersionUID = 1L;
+
+			@Override
+            public void actionPerformed(ActionEvent e) {
+                // Xử lý khi phím tắt được nhấn
+            }
+        });
+		btnhoadon.setBorder(null);
+		btnhoadon.setText("Hóa Đơn (F6)");
+		btnhoadon.setForeground(Color.WHITE);
+		btnhoadon.setFont(new Font("Tahoma", Font.BOLD, 18));
+		btnhoadon.setBackground(new Color(128, 128, 128,150));
+		btnhoadon.setBounds(828, 70, 165, 87);
+		contentPane.add(btnhoadon);
+		btnhoadon.setLayout(null);
+		
+        testbutton.Buttontest btnthongke = new testbutton.Buttontest();
+        btnthongke.addMouseListener(new MouseAdapter() {
+			@Override
+			public void mouseClicked(MouseEvent e) {
+				GD_ThongKeKhachHang thongkekhachhang = new GD_ThongKeKhachHang();
+				thongkekhachhang.setDefaultCloseOperation(JFrame.DISPOSE_ON_CLOSE);
+				thongkekhachhang.setVisible(true);
+				dispose();
+			}
+		});
+        KeyStroke keyStrokeThongKe = KeyStroke.getKeyStroke(KeyEvent.VK_F7, 0);
+        btnthongke.getInputMap(JComponent.WHEN_IN_FOCUSED_WINDOW).put(keyStrokeThongKe, "F7");
+        btnthongke.getActionMap().put("F7", new AbstractAction() {
+            /**
+			 * 
+			 */
+			private static final long serialVersionUID = 1L;
+
+			@Override
+            public void actionPerformed(ActionEvent e) {
+                // Xử lý khi phím tắt được nhấn
+				GD_ThongKeKhachHang thongkekhachhang = new GD_ThongKeKhachHang();
+				thongkekhachhang.setDefaultCloseOperation(JFrame.DISPOSE_ON_CLOSE);
+				thongkekhachhang.setVisible(true);
+				dispose();
+            }
+        });
+        btnthongke.setBorder(null);
+        btnthongke.setText("Thống Kê (F7)");
+        btnthongke.setForeground(Color.WHITE);
+        btnthongke.setFont(new Font("Tahoma", Font.BOLD, 18));
+        btnthongke.setBackground(new Color(0, 0, 0, 150));
+        btnthongke.setBounds(993, 70, 166, 87);
+		contentPane.add(btnthongke);
+		btnthongke.setLayout(null);
+		
+
+		table = new JTable();
+
+		JScrollPane scrollPane = new JScrollPane(table);
+		scrollPane.setBounds(0, 263, 1159, 348);
+		contentPane.add(scrollPane);
+
+		model = new DefaultTableModel();
+		model.addColumn("Mã hóa đơn");
+		model.addColumn("Ngày lập");
+		model.addColumn("Tên khách hàng");
+		model.addColumn("SĐT khách");
+		model.addColumn("Tên Nhân viên");
+		model.addColumn("Tổng tiền");
+		// Add data to the table
+
+		table.setModel(model);
+
+		JScrollBar scrollBar = new JScrollBar(JScrollBar.VERTICAL, 30, 40, 0, 500);
+		scrollPane.setRowHeaderView(scrollBar);
+
+		JPanel pnl_chucNangTim = new JPanel();
+		pnl_chucNangTim.setBackground(new Color(192, 192, 192));
+		pnl_chucNangTim.setBounds(0, 150, 1159, 114);
+		contentPane.add(pnl_chucNangTim);
+		pnl_chucNangTim.setLayout(null);
+
+		JLabel lblNewLabel_1 = new JLabel("Tên khách :");
+		lblNewLabel_1.setFont(new Font("Tahoma", Font.BOLD, 14));
+		lblNewLabel_1.setBounds(109, 25, 91, 14);
+		pnl_chucNangTim.add(lblNewLabel_1);
+
+		txt_tenKhach = new JTextField();
+		txt_tenKhach.setColumns(10);
+		txt_tenKhach.setBounds(197, 24, 183, 30);
+		pnl_chucNangTim.add(txt_tenKhach);
+
+		JLabel lblNewLabel_1_1 = new JLabel("SĐT:");
+		lblNewLabel_1_1.setFont(new Font("Tahoma", Font.BOLD, 14));
+		lblNewLabel_1_1.setBounds(154, 66, 42, 14);
+		pnl_chucNangTim.add(lblNewLabel_1_1);
+
+		txt_sdtKhach = new JTextField();
+		txt_sdtKhach.setColumns(10);
+		txt_sdtKhach.setBounds(197, 65, 183, 30);
+		pnl_chucNangTim.add(txt_sdtKhach);
+
+		JLabel lblNewLabel_1_2 = new JLabel("Ngày lập:");
+		lblNewLabel_1_2.setFont(new Font("Tahoma", Font.BOLD, 14));
+		lblNewLabel_1_2.setBounds(428, 24, 91, 17);
+		pnl_chucNangTim.add(lblNewLabel_1_2);
+
+		JLabel lblNewLabel_1_1_1 = new JLabel("Mã hóa đơn :");
+		lblNewLabel_1_1_1.setFont(new Font("Tahoma", Font.BOLD, 14));
+		lblNewLabel_1_1_1.setBounds(406, 67, 97, 14);
+		pnl_chucNangTim.add(lblNewLabel_1_1_1);
+
+		txt_maHD = new JTextField();
+		txt_maHD.setColumns(10);
+		txt_maHD.setBounds(502, 65, 183, 30);
+		pnl_chucNangTim.add(txt_maHD);
+
+		date_ngayLap = new JDateChooser();
+		date_ngayLap.setBounds(502, 25, 183, 30);
+		pnl_chucNangTim.add(date_ngayLap);
+
+		JButton btn_LamMoi = new JButton("Làm mới");
+		btn_LamMoi.setFont(new Font("Tahoma", Font.BOLD, 13));
+		btn_LamMoi.addActionListener(new ActionListener() {
+			public void actionPerformed(ActionEvent e) {
+			}
+		});
+		btn_LamMoi.setBackground(new Color(192, 192, 192));
+		btn_LamMoi.setIcon(new ImageIcon(GD_QLHoaDon.class.getResource("/Imgs/return.png")));
+		btn_LamMoi.setBounds(1013, 65, 121, 31);
+		pnl_chucNangTim.add(btn_LamMoi);
+		btn_LamMoi.addMouseListener(new MouseAdapter() {
+			@Override
+			public void mouseClicked(MouseEvent e) {
+				txt_maHD.setText("");
+				txt_sdtKhach.setText("");
+				txt_tenKhach.setText("");
+				loadTable(lbltennv.getText());
+			}
+		});
+
+		JButton btnTimKiem = new JButton("Tìm kiếm");
+		btnTimKiem.setBackground(new Color(192, 192, 192));
+		btnTimKiem.setFont(new Font("Tahoma", Font.BOLD, 13));
+		btnTimKiem.setIcon(new ImageIcon(GD_QLHoaDon.class.getResource("/Imgs/search.png")));
+		btnTimKiem.setBounds(741, 65, 121, 31);
+		pnl_chucNangTim.add(btnTimKiem);
+		btnTimKiem.addMouseListener(new MouseAdapter() {
+			@Override
+			public void mouseClicked(MouseEvent e) {
+				Date ngayLap = date_ngayLap.getDate();
+				String ngayLapFormatted = null;
+				if (ngayLap != null) {
+				    // Ngày đã được chọn, định dạng lại ngày thành chuỗi
+					SimpleDateFormat sdf = new SimpleDateFormat("yyyy-MM-dd");
+					ngayLapFormatted = sdf.format(ngayLap);
+					System.out.println(ngayLapFormatted);
+				} else {
+				    // Ngày chưa được chọn
+				    System.out.println("Vui lòng chọn ngày lập.");
+				}
+				
+				timKiemTheoMaTaiKhoan(txt_maHD.getText(),txt_tenKhach.getText(),txt_sdtKhach.getText(),ngayLapFormatted,lbltennv.getText());
+				
+			}
+		});
+
+		JButton btn_ChiTiet = new JButton("Chi tiết");
+		btn_ChiTiet.setIcon(new ImageIcon(GD_QLHoaDon.class.getResource("/Imgs/view-details.png")));
+		btn_ChiTiet.setFont(new Font("Tahoma", Font.BOLD, 13));
+		btn_ChiTiet.setBackground(new Color(192, 192, 192));
+		btn_ChiTiet.setBounds(879, 65, 121, 31);
+		pnl_chucNangTim.add(btn_ChiTiet);
+
+		table.addMouseListener(new MouseAdapter() {
+			@Override
+			public void mouseClicked(MouseEvent e) {
+				int row = table.getSelectedRow();
+				txt_maHD.setText(model.getValueAt(row, 0).toString());
+				String dateString = model.getValueAt(row, 1).toString();
+				SimpleDateFormat dateFormat = new SimpleDateFormat("yyyy-MM-dd HH:mm:ss.SSSSSSS");
+				Date initialDate;
+				try {
+					initialDate = dateFormat.parse(dateString);
+					JDateChooser dateChooser = new JDateChooser();
+					dateChooser.setDate(initialDate);
+				} catch (ParseException ed) {
+					ed.printStackTrace();
+				}
+
+				txt_tenKhach.setText(model.getValueAt(row, 2).toString());
+				txt_sdtKhach.setText(model.getValueAt(row, 3).toString());
+			}
+		});
+
+		btn_ChiTiet.addMouseListener(new MouseAdapter() {
+			String url = "jdbc:sqlserver://localhost:1433;databasename=Karaoke4T";
+			String username = "sa";
+			String password = "123";
+
+			@SuppressWarnings("unused")
+			String maKH = "";
+			String SDT = "";
+			String sdtKH = "";
+			String gioNhanPhong = "";
+			String gioTraPhong = "";
+			String tongThoiLuong = "";
+			String tongTienDV = "";
+			String tongTienPhong = "";
+			Double tongTienHoaDon = 0.0;
+			String tienNhan = "";
+			Double tongTam = 0.0;
+			String tenPhong = "";
+
+			@Override
+			public void mouseClicked(MouseEvent e) {
+
+				int selectedRow = table.getSelectedRow();
+				if (selectedRow != -1) { // Kiểm tra xem đã chọn một dòng hay chưa
+					try {
+					    
+						Connection connection = DriverManager.getConnection(url, username, password);
+
+						String sqlNhanPhongTraPhong = "SELECT gioNhanPhong, gioKetThuc , tienKhachTra , SDT , tenPhong FROM HoaDon hd \r\n"
+								+ "inner join KhachHang kh on hd.maKH = kh.maKH \r\n"
+								+ "inner join ChiTietHoaDon cthd on hd.maHD = cthd.maHD\r\n"
+								+ "inner join Phong p on p.maPhong = cthd.maPhong\r\n"
+								+ "where hd.maHD = ?";
+						PreparedStatement statementNPTP = connection.prepareStatement(sqlNhanPhongTraPhong);
+						statementNPTP.setString(1, model.getValueAt(selectedRow, 0).toString());
+						ResultSet resultSetNPTP = statementNPTP.executeQuery();
+
+						while (resultSetNPTP.next()) {
+							gioNhanPhong = resultSetNPTP.getString(1);
+							gioTraPhong = resultSetNPTP.getString(2);
+							tienNhan = resultSetNPTP.getString(3);
+							SDT = resultSetNPTP.getString(4);
+							tenPhong = resultSetNPTP.getString(5);
+						}
+
+						String sqlTongThoiLuong = "SELECT DATEDIFF(MINUTE, gioNhanPhong, gioKetThuc) AS tongThoiLuong\r\n"
+								+ "FROM HoaDon where maHD = ?";
+						PreparedStatement statementTTL = connection.prepareStatement(sqlTongThoiLuong);
+						statementTTL.setString(1, model.getValueAt(selectedRow, 0).toString());
+						ResultSet resultSetTTL = statementTTL.executeQuery();
+
+						while (resultSetTTL.next()) {
+							tongThoiLuong = resultSetTTL.getString("tongThoiLuong");
+						}
+
+						String sqlLoadCTHD = "UPDATE ChiTietHoaDon SET thoiLuong = ? where maHD = ?";
+						PreparedStatement statementLoadTTL = connection.prepareStatement(sqlLoadCTHD);
+						statementLoadTTL.setString(1, tongThoiLuong);
+						statementLoadTTL.setString(2, model.getValueAt(selectedRow, 0).toString());
+
+						statementLoadTTL.executeUpdate();
+
+						String sqlLayTienDV = "SELECT SUM(ctdv.soLuong * dv.donGia) AS TongTienDV \r\n"
+								+ "FROM ChiTietDichVu ctdv\r\n" + "INNER JOIN DichVu dv ON ctdv.maDV = dv.maDV\r\n"
+								+ "INNER JOIN HoaDon hd ON ctdv.maHD = hd.maHD\r\n"
+								+ "WHERE ctdv.maHD = ? GROUP BY ctdv.maHD";
+						PreparedStatement statementTienDV = connection.prepareStatement(sqlLayTienDV);
+						statementTienDV.setString(1, model.getValueAt(selectedRow, 0).toString());
+
+						ResultSet resultSetTienDV = statementTienDV.executeQuery();
+
+//						while (resultSetTienDV.next()) {
+//							tongTienDV = resultSetTienDV.getString("TongTienDV");
+//						}
+						if (resultSetTienDV.next()) {
+						    tongTienDV = resultSetTienDV.getString("TongTienDV");
+						} else {
+						    // If there are no services, set the total service cost to 0
+						    tongTienDV = "0";
+						}
+
+
+						String sqlLayTienPhong = "SELECT FLOOR((giaTien / 60) * thoiLuong) as TienPhong "
+								+ "FROM Phong p inner join LoaiPhong lp on p.maLP = lp.maLP "
+								+ "inner join ChiTietHoaDon cthd on p.maPhong = cthd.maPhong WHERE cthd.maHD = ?";
+						PreparedStatement statementTienPhong = connection.prepareStatement(sqlLayTienPhong);
+						statementTienPhong.setString(1, model.getValueAt(selectedRow, 0).toString());
+
+						ResultSet resultSetTienPhong = statementTienPhong.executeQuery();
+
+						while (resultSetTienPhong.next()) {
+							tongTienPhong = resultSetTienPhong.getString("TienPhong");
+
+						}
+
+						String sql = "SELECT TOP 10 *\r\n" + "FROM KhachHang\r\n" + "ORDER BY maKH DESC;";
+
+						PreparedStatement preparedStatement = connection.prepareStatement(sql);
+						ResultSet resultSet = preparedStatement.executeQuery();
+						// Xử lý kết quả trả về (nếu có)
+						while (resultSet.next()) {
+							maKH = resultSet.getString("maKH");
+							sdtKH = resultSet.getString("SDT");
+						}
+
+						GD_InHoaDon inHoaDon = new GD_InHoaDon();
+						inHoaDon.lbl_maHD.setText(model.getValueAt(selectedRow, 0).toString());
+						inHoaDon.lbl_sdtKH.setText(model.getValueAt(selectedRow, 3).toString());
+						inHoaDon.lbl_tenKH.setText(model.getValueAt(selectedRow, 2).toString());
+						inHoaDon.lbl_tenNV.setText(model.getValueAt(selectedRow, 4).toString());
+						inHoaDon.valueTenPhong.setText(tenPhong);
+						System.err.println(model.getValueAt(selectedRow, 0).toString());
+						inHoaDon.loadChiTietDichVuDaDat(model.getValueAt(selectedRow, 0).toString());
+						inHoaDon.lbl_gioNhanPhong.setText(gioNhanPhong);
+						inHoaDon.lbl_gioTraPhong.setText(gioTraPhong);
+						inHoaDon.lbl_tongThoiLuong.setText(tongThoiLuong + " phút");
+						
+					    double tienDV = Double.parseDouble(tongTienDV);
+					    String formattedTienDV = formatCurrency(tienDV);
+						inHoaDon.lbl_tienDichVu.setText(formattedTienDV);
+//						inHoaDon.lbl_tienDichVu.setText(tongTienDV);
+						
+					    double tienPhong = Double.parseDouble(tongTienPhong);
+					    String formattedTienPhong = formatCurrency(tienPhong);
+						inHoaDon.lbl_tienPhong.setText(formattedTienPhong);
+						
+						if (!tongTienDV.isEmpty()) {
+							tongTam = Double.parseDouble(tongTienDV) + Double.parseDouble(tongTienPhong);
+						} else {
+							tongTam = Double.parseDouble(tongTienPhong);
+						}
+
+						if (sdtKH.equals(SDT)) {
+							inHoaDon.lbl_KhuyenMai.setText("10%");
+						} else {
+							inHoaDon.lbl_KhuyenMai.setText("5%");
+						}
+
+						Double vat = tongTienHoaDon * VAT;
+						@SuppressWarnings("unused")
+						Double tongSauVATvaCK = tongTienHoaDon - vat;
+				        inHoaDon.lbl_tongTam.setText(formatCurrency(tongTam));
+				        String tongcong = ((String) model.getValueAt(selectedRow, 5)).replace(".", "");
+				        System.err.println(tongcong);
+				        inHoaDon.lbl_tongCong.setText(formatCurrency(Double.parseDouble(tongcong)));
+				        
+				        
+				        
+				        double TienNhann = Double.parseDouble(tienNhan);
+				        String formatTienNhan = formatCurrency(TienNhann);
+						inHoaDon.lbl_tienNhan.setText(formatTienNhan);
+						String chuoinew = ((String) model.getValueAt(selectedRow, 5)).replace(".", "");
+						Double tienThua = TienNhann- Double.parseDouble(chuoinew);
+				        inHoaDon.lbl_tienThua.setText(formatCurrency(tienThua));
+						inHoaDon.setDefaultCloseOperation(JFrame.DISPOSE_ON_CLOSE);
+						inHoaDon.setVisible(true);
+
+						resultSetTTL.close();
+						statementTTL.close();
+						resultSetTienDV.close();
+						statementTienDV.close();
+						statementLoadTTL.close();
+						dispose();
+					} catch (SQLException e1) {
+						e1.printStackTrace();
+					}
+
+				} else {
+					// Hiển thị thông báo hoặc thực hiện hành động khác khi không có dòng được chọn
+					JOptionPane.showMessageDialog(null, "Vui lòng chọn một dòng trong bảng trước khi xem chi tiết.");
+				}
+			}
+		});
+		
+		connectDB.getInstance().connect();
+		loadTable(lbltennv.getText());
+		
+		JLabel lblNewLabel = new JLabel("");
+		lblNewLabel.setHorizontalAlignment(SwingConstants.CENTER);
+		lblNewLabel.setIcon(new ImageIcon(GD_QLHoaDon.class.getResource("/Imgs/370.png")));
+		lblNewLabel.setBounds(-95, -176, 1333, 957);
+		contentPane.add(lblNewLabel);
+	}
+
+	public void loadTable(String tenNhanVien) {
+	    try {
+	        // Kết nối đến cơ sở dữ liệu
+	        Connection connection = DriverManager.getConnection("jdbc:sqlserver://localhost:1433;databasename=Karaoke4T", "sa", "123");
+	        @SuppressWarnings("unused")
+			DecimalFormat decimalFormat = new DecimalFormat("#,##0");
+	        // Sử dụng PreparedStatement để có thể truyền tham số
+	        String sql = "select maHD, ngayLap, kh.tenKH, kh.SDT, tenNV, tongTien from HoaDon h "
+	                + "inner join KhachHang kh on h.maKH = kh.maKH "
+	                + "inner join NhanVien nv on h.maNV = nv.maNV where tenNV = ? and tongTien > 0";
+	        try (PreparedStatement preparedStatement = connection.prepareStatement(sql)) {
+	            // Thiết lập giá trị cho tham số
+	            preparedStatement.setString(1, tenNhanVien);
+	            try (ResultSet resultSet = preparedStatement.executeQuery()) {
+	                // Xóa dữ liệu cũ trong tableModel
+	                model.setRowCount(0);
+	                
+	               
+	                // Định dạng ngày giờ
+//	                SimpleDateFormat dateFormat = new SimpleDateFormat("dd/MM/yyyy HH:mm:ss");
+//	                DecimalFormat decimalFormat = new DecimalFormat("###,###,### VND");
+
+	              
+	                
+	                // Thêm dữ liệu từ ResultSet vào tableModel
+	                while (resultSet.next()) {
+	                	 
+	                    Object[] row = {
+	                        resultSet.getString("maHD"),
+	                        resultSet.getTimestamp("ngayLap"),
+	                        resultSet.getString("tenKH"),
+	                        resultSet.getString("SDT"),
+	                        resultSet.getString("tenNV"),
+	                        formatTongTien(resultSet.getDouble("tongTien"))
+	                        // Thêm các cột khác nếu cần
+	                    };
+	                    model.addRow(row);
+	                }
+	            }
+	        }
+
+	        // Đóng tài nguyên
+	        connection.close();
+	    } catch (Exception e) {
+	        e.printStackTrace();
+	    }
+	}
+	
+	
+	private static String formatTongTien(double tongTien) {
+	    DecimalFormat decimalFormat = new DecimalFormat("#,##0");
+	    String formattedTongTien = decimalFormat.format(tongTien);
+	    return formattedTongTien.replace(",", ".");
+	}
+	
+	
+	private void timKiemTheoMaTaiKhoan(String maHD,String tenKH,String SDT, String ngayLap, String tenNhanVien) {
+		try {
+			Connection connection = DriverManager.getConnection("jdbc:sqlserver://localhost:1433;databasename=Karaoke4T", "sa", "123");
+
+			String sqlTTHD = "select maHD , ngayLap , tenKH , kh.SDT , tenNV ,tongTien\r\n"
+					+ "from HoaDon hd inner join KhachHang kh on hd.maKH = kh.maKH\r\n"
+					+ "inner join NhanVien nv on hd.maNV = nv.maNV\r\n"
+					+ "where maHD =? or tenKH =? or kh.SDT =? or ngayLap = ? and tenNV = ?";
+			PreparedStatement statementTTHD = connection.prepareStatement(sqlTTHD);
+			statementTTHD.setString(1, maHD);
+			statementTTHD.setString(2, tenKH);
+			statementTTHD.setString(3, SDT);
+			statementTTHD.setString(4, ngayLap);
+			statementTTHD.setString(5, tenNhanVien);
+
+			ResultSet resultSetTTHD = statementTTHD.executeQuery();
+			model.setRowCount(0);
+			while (resultSetTTHD.next()) {
+				
+				Object[] rowData = { resultSetTTHD.getString(1), resultSetTTHD.getString(2), resultSetTTHD.getString(3),
+						resultSetTTHD.getString(4), resultSetTTHD.getString(5), resultSetTTHD.getString(6) };
+				model.addRow(rowData);
+			}
+		} catch (SQLException sqle) {
+			sqle.printStackTrace();
+		}
+
+	}
+
+	@Override
+	public void actionPerformed(ActionEvent e) {
+		if (e.getSource() == timer) {
+            // Cập nhật thời gian
+            updateClock();
+        }
+	}
+    private void updateClock() {
+        Calendar cal = Calendar.getInstance();
+        int hour = cal.get(Calendar.HOUR_OF_DAY);
+        int minute = cal.get(Calendar.MINUTE);
+        int second = cal.get(Calendar.SECOND);
+        int day = cal.get(Calendar.DAY_OF_MONTH);
+        int month = cal.get(Calendar.MONTH)+1;
+        int year = cal.get(Calendar.YEAR);
+        
+        String ampm;
+        if (hour >= 12) {
+            ampm = "PM";
+            if (hour > 24) {
+                hour -= 12;
+            }
+        } else {
+            ampm = "AM";
+            if (hour == 0) {
+                hour = 12;
+            }
+        }
+        
+        String time = String.format("%02d:%02d:%02d %s  %04d/%02d/%02d", hour, minute, second, ampm, year, month, day);
+        lblClock.setText(time);
+    }
+}

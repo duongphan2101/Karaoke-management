@@ -1,0 +1,285 @@
+package GiaoDien;
+
+
+import javax.swing.JFrame;
+import javax.swing.JPanel;
+import javax.swing.border.EmptyBorder;
+import javax.swing.JLabel;
+import javax.swing.JOptionPane;
+
+import java.awt.Font;
+import javax.swing.JButton;
+import com.itextpdf.text.BaseColor;
+import com.itextpdf.text.Chunk;
+import com.itextpdf.text.Document;
+import com.itextpdf.text.DocumentException;
+import com.itextpdf.text.Element;
+import com.itextpdf.text.Paragraph;
+import com.itextpdf.text.Rectangle;
+import com.itextpdf.text.pdf.BaseFont;
+import com.itextpdf.text.pdf.PdfPCell;
+import com.itextpdf.text.pdf.PdfPTable;
+import com.itextpdf.text.pdf.PdfWriter;
+import Entity.CustomDashedLineSeparator;
+import com.itextpdf.text.PageSize;
+import java.awt.Color;
+import java.awt.Desktop;
+import java.awt.event.ActionEvent;
+import java.awt.event.ActionListener;
+import java.awt.event.MouseAdapter;
+import java.awt.event.MouseEvent;
+import java.io.File;
+import java.io.FileOutputStream;
+import java.text.SimpleDateFormat;
+import java.util.Date;
+import java.text.DecimalFormat;
+
+public class GD_PhieuDatPhong extends JFrame {
+
+	/**
+	 * 
+	 */
+	private static final long serialVersionUID = 1L;
+	private JPanel contentPane;
+	private JLabel  lblSoPhong,lbl_DiaChi,lbl_CMND,lbl_SDT,lbl_TenKH,lbl_GiaTien,lbl_SoNguoi;
+	@SuppressWarnings("unused")
+	private String tpm;
+	CustomDashedLineSeparator custom;
+	@SuppressWarnings("unused")
+	private String soluongnguoi,layMaPhong;
+	/**
+	 * Launch the application.
+	 */
+
+	/**
+	 * Create the frame.
+	 */
+	public GD_PhieuDatPhong() {
+		setDefaultCloseOperation(JFrame.EXIT_ON_CLOSE);
+		setTitle("Phiếu đặt phòng");
+		setBounds(100, 100, 620, 388);
+		setResizable(false);
+		contentPane = new JPanel();
+		contentPane.setBorder(new EmptyBorder(5, 5, 5, 5));
+
+		setContentPane(contentPane);
+		contentPane.setLayout(null);
+		
+		lblSoPhong = new JLabel("SỐ PHÒNG: ");
+		lblSoPhong.setBounds(188, 11, 299, 29);
+		lblSoPhong.setFont(new Font("Tahoma", Font.BOLD, 24));
+		contentPane.add(lblSoPhong);
+		
+		lbl_TenKH = new JLabel("Tên Khách Hàng :");
+		lbl_TenKH.setFont(new Font("Tahoma", Font.BOLD, 13));
+		lbl_TenKH.setBounds(97, 88, 229, 16);
+		contentPane.add(lbl_TenKH);
+		
+		lbl_SDT = new JLabel("Số Điện Thoại :");
+		lbl_SDT.setFont(new Font("Tahoma", Font.BOLD, 13));
+		lbl_SDT.setBounds(97, 129, 229, 16);
+		contentPane.add(lbl_SDT);
+		
+		lbl_CMND = new JLabel("CMND :");
+		lbl_CMND.setFont(new Font("Tahoma", Font.BOLD, 13));
+		lbl_CMND.setBounds(97, 167, 243, 16);
+		contentPane.add(lbl_CMND);
+		
+		lbl_DiaChi = new JLabel("Địa Chỉ :");
+		lbl_DiaChi.setFont(new Font("Tahoma", Font.BOLD, 13));
+		lbl_DiaChi.setBounds(97, 205, 399, 16);
+		contentPane.add(lbl_DiaChi);
+		
+		lbl_SoNguoi = new JLabel("Số Người :");
+		lbl_SoNguoi.setFont(new Font("Tahoma", Font.BOLD, 13));
+		lbl_SoNguoi.setBounds(420, 88, 176, 16);
+		contentPane.add(lbl_SoNguoi);
+		
+		lbl_GiaTien = new JLabel("Giá Tiền :");
+		lbl_GiaTien.setFont(new Font("Tahoma", Font.BOLD, 13));
+		lbl_GiaTien.setBounds(420, 129, 150, 16);
+		contentPane.add(lbl_GiaTien);
+		
+		JButton btn_quayLai = new JButton("Đóng");
+		btn_quayLai.addMouseListener(new MouseAdapter() {
+			@Override
+			public void mouseClicked(MouseEvent e) {				
+				GD_DatPhong dp = new GD_DatPhong();
+				dp.setVisible(true);
+				dp.setLocationRelativeTo(null);
+				dispose();
+			}
+		});
+		btn_quayLai.setFont(new Font("Tahoma", Font.PLAIN, 13));
+		btn_quayLai.setForeground(new Color(255, 255, 255));
+		btn_quayLai.setBackground(new Color(0, 128, 255));
+		btn_quayLai.setBounds(110, 260, 131, 49);
+		contentPane.add(btn_quayLai);
+		
+		JButton btn_xacNhan = new JButton("Xác nhận");
+		btn_xacNhan.setFont(new Font("Tahoma", Font.PLAIN, 13));
+		btn_xacNhan.setForeground(Color.WHITE);
+		btn_xacNhan.setBackground(new Color(0, 166, 0));
+		btn_xacNhan.setBounds(356, 260, 131, 49);
+		btn_xacNhan.addActionListener(new ActionListener() {
+			
+			@Override
+			public void actionPerformed(ActionEvent e) {
+				// TODO Auto-generated method stub
+				 taoVaLuuPDF();
+			}
+
+			private void taoVaLuuPDF() {
+				// TODO Auto-generated method stub
+            	Document document = new Document(PageSize.A4.rotate());
+            	 try {
+                     // Sử dụng thời gian hiện tại để tạo tên file duy nhất
+                     SimpleDateFormat dateFormat = new SimpleDateFormat("yyyyMMdd_HHmmss");
+                     String fileName = "PDF/PhieuDatPhong_" + dateFormat.format(new Date()) + ".pdf";
+
+                     PdfWriter.getInstance(document, new FileOutputStream(fileName));
+                     document.open();
+
+                     BaseFont unicodeFont = BaseFont.createFont("Tahoma Regular font.ttf", BaseFont.IDENTITY_H,
+                             BaseFont.EMBEDDED);
+                     com.itextpdf.text.Font vietnameseFont = new com.itextpdf.text.Font(unicodeFont, 18,
+                             com.itextpdf.text.Font.NORMAL);
+
+                     // Add content to the PDF document
+                     addContent(document, vietnameseFont);
+
+                     // Close the document
+                     document.close();
+                     
+                     // Mở file PDF sau khi đã lưu
+                     Desktop.getDesktop().open(new File(fileName));
+                     
+                     // Display a message indicating successful PDF creation
+                     JOptionPane.showMessageDialog(contentPane, "ĐÃ XUẤT FILE PDF!", "Success",
+                             JOptionPane.PLAIN_MESSAGE);
+                 } catch (Exception e) {
+                     e.printStackTrace();
+                 }
+			}
+
+			private void addContent(Document document, com.itextpdf.text.Font vietnameseFont) throws DocumentException {
+				
+				document.add(new Paragraph("******************************************************************************", vietnameseFont));
+				Paragraph karaokeParagraph = new Paragraph("KARAOKE4T", vietnameseFont);
+			    karaokeParagraph.setAlignment(Element.ALIGN_CENTER); // Căn giữa đều
+			    document.add(karaokeParagraph);
+				document.add(new Paragraph("******************************************************************************", vietnameseFont));
+				
+				custom = new CustomDashedLineSeparator();
+				custom.setLineWidth(1);
+				custom.setOffset(5);
+				custom.setLineColor(BaseColor.BLACK);
+				document.add(new Chunk(custom));
+				
+				Paragraph phieudatphong = new Paragraph("PHIẾU ĐẶT PHÒNG", vietnameseFont);
+				phieudatphong.setAlignment(Element.ALIGN_CENTER); // Căn giữa đều
+			    document.add(phieudatphong);	
+			    
+				document.add(new Paragraph("\n"));
+				custom = new CustomDashedLineSeparator();
+				custom.setLineWidth(1);
+				custom.setOffset(5);
+				custom.setLineColor(BaseColor.BLACK);
+				document.add(new Chunk(custom));
+				
+				// Thêm các dữ liệu từ các JLabel vào tài liệu PDF
+	            document.add(new Paragraph(lblSoPhong.getText(), vietnameseFont));
+	            document.add(new Paragraph("\n"));
+	            
+	            PdfPTable infoTable1 = new PdfPTable(2);
+			    infoTable1.setWidthPercentage(100);
+			    
+                PdfPCell cellHoTen = new PdfPCell(new Paragraph("" + lbl_TenKH.getText(), vietnameseFont));
+                cellHoTen.setBorder(Rectangle.NO_BORDER);
+                infoTable1.addCell(cellHoTen);
+                
+                PdfPCell cellSDT = new PdfPCell(new Paragraph("" + lbl_SDT.getText(), vietnameseFont));
+                cellSDT.setBorder(Rectangle.NO_BORDER);
+                cellSDT.setHorizontalAlignment(Element.ALIGN_RIGHT); // Căn phải
+                infoTable1.addCell(cellSDT);
+                infoTable1.completeRow();
+                document.add(infoTable1);
+                document.add(new Paragraph("\n"));
+                
+                PdfPTable infoTable2 = new PdfPTable(2);
+			    infoTable2.setWidthPercentage(100);
+			    
+                PdfPCell cellCMND = new PdfPCell(new Paragraph("" + lbl_CMND.getText(), vietnameseFont));
+                cellCMND.setBorder(Rectangle.NO_BORDER);
+                infoTable2.addCell(cellCMND);
+                
+                PdfPCell cellSonguoi = new PdfPCell(new Paragraph("" + lbl_SoNguoi.getText(), vietnameseFont));
+                cellSonguoi.setBorder(Rectangle.NO_BORDER);
+                cellSonguoi.setHorizontalAlignment(Element.ALIGN_RIGHT); // Căn phải
+                infoTable2.addCell(cellSonguoi);
+                infoTable2.completeRow();
+                document.add(infoTable2);
+                document.add(new Paragraph("\n"));
+	            document.add(new Paragraph(lbl_DiaChi.getText(), vietnameseFont));
+	            
+	            // Định dạng giá tiền thành tiền tệ VND
+	            Double giaTien = Double.parseDouble(lbl_GiaTien.getText().split(":")[1].trim().replaceAll("[^\\d.]", ""));
+	            DecimalFormat currencyFormat = new DecimalFormat("###,###,### VND");
+	            String formattedGiaTien = currencyFormat.format(giaTien);
+	            
+                document.add(new Paragraph("\n"));
+    			custom = new CustomDashedLineSeparator();
+				custom.setLineWidth(1);
+				custom.setOffset(10);
+				custom.setLineColor(BaseColor.BLACK);
+				document.add(new Chunk(custom));
+                document.add(new Paragraph("\n"));
+                
+                Paragraph giaTienn = new Paragraph("GIÁ TIỀN: " + formattedGiaTien, vietnameseFont);
+                giaTienn.getFont().setStyle(com.itextpdf.text.Font.BOLD);
+                giaTienn.setAlignment(Element.ALIGN_RIGHT); // Căn phải
+                document.add(giaTienn);
+                
+     			custom = new CustomDashedLineSeparator();
+ 				custom.setLineWidth(1);
+ 				custom.setOffset(5);
+ 				custom.setLineColor(BaseColor.BLACK);
+ 				document.add(new Chunk(custom));
+
+                Paragraph camOn = new Paragraph("Cảm ơn quý khách đã đến quán", vietnameseFont);
+                camOn.getFont().setStyle(com.itextpdf.text.Font.BOLDITALIC);
+                camOn.setAlignment(Element.ALIGN_CENTER); // Căn phải
+                document.add(camOn);
+			}
+		});
+		contentPane.add(btn_xacNhan);
+		
+		JLabel lbl_TenPhong = new JLabel("");
+		lbl_TenPhong.setFont(new Font("Tahoma", Font.BOLD, 24));
+		lbl_TenPhong.setBounds(337, 11, 76, 29);
+		contentPane.add(lbl_TenPhong);
+	}
+		public void loadPhieuDatPhongTuDuLieuNhap(String maPhong,String tenKH,String sdt,String cmnd,String diaChi,String songuoi,float giaTien) {
+				layMaPhong = maPhong;
+                String columnName1 = maPhong;
+                String columnName2 = tenKH;
+                String columnName3 = sdt;
+                String columnName4 = cmnd;
+                String columnName5 = diaChi;
+                String columnName6 = songuoi;
+                double columnName7 = giaTien;
+                
+                lblSoPhong.setText( "Số phòng: " + columnName1);
+                lbl_TenKH.setText( "Tên khách hàng: " + columnName2);
+                lbl_SDT.setText( "Số điện thoại: " + columnName3);
+                lbl_CMND.setText( "Chứng minh nhân dân: " + columnName4);
+                lbl_DiaChi.setText( "Địa chỉ: " + columnName5);
+                lbl_SoNguoi.setText("Số lượng người: " + columnName6);
+                lbl_GiaTien.setText( "Giá tiền: " + columnName7);
+                
+                GD_DatPhong dp = new GD_DatPhong();
+                dp.capNhatTrangThaiTrongThanhCho(maPhong);
+              
+	}
+
+}
